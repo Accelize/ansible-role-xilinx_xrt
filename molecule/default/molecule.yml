@@ -1,0 +1,27 @@
+---
+# Default scenario that does not require a FPGA device to run.
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+platforms:
+  - name: ubuntu_bionic
+    image: ubuntu:bionic
+    privileged: true
+  - name: ubuntu_xenial
+    image: ubuntu:xenial
+    privileged: true
+  - name: centos_7
+    image: centos:7
+    privileged: true
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

@@ -1,0 +1,78 @@
+---
+
+- name: Get "xbutil" file information
+  stat:
+    path: /opt/xilinx/xrt/bin/xbutil
+  register: xbutil
+
+- name: Ensure EPEL repository is installed
+  yum:
+    name: epel-release
+    state: present
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  when: ansible_os_family == 'RedHat'
+
+- name: Create temporary directory
+  tempfile:
+    state: directory
+    prefix: xrt_
+  register: xrt_tmp
+  when: not xbutil.stat.exists
+
+- name: Download XRT package from Xilinx website
+  get_url:
+    url: "https://www.xilinx.com/bin/public/openDownload?filename={{ item }}"
+    dest: "{{ xrt_tmp.path }}/{{ item }}"
+  with_items:
+    - "{{ xrt_package }}"
+    - "{{ xrt_package }}.digests"
+    - "{{ xrt_package }}.sig"
+  retries: 10
+  delay: 1
+  when: not xbutil.stat.exists
+
+- name: Download Xilinx master signing key
+  get_url:
+    url: "https://www.xilinx.com/support/download/xilinx-master-signing-key.asc"
+    dest: "{{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
+  retries: 10
+  delay: 1
+  when: not xbutil.stat.exists
+
+- name: Ensure Xilinx master signing key is imported
+  command: "gpg --import {{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
+  when: not xbutil.stat.exists
+
+- name: Verify package signature
+  command: "gpg --verify {{ xrt_package }}.sig {{ xrt_package }}"
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  when: not xbutil.stat.exists
+
+- name: Verify package checksum
+  command: sha512sum -c {{ xrt_package }}.digests
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  when: not xbutil.stat.exists
+
+- name: Ensure XRT DEB package is installed
+  package:
+    deb: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+    state: present
+    install_recommends: false
+  when: ansible_os_family == 'Debian' and not xbutil.stat.exists
+
+- name: Ensure XRT RPM package is installed
+  yum:
+    name: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+    state: present
+    install_weak_deps: false
+  when: ansible_os_family == 'RedHat' and not xbutil.stat.exists
+
+- name: Clean up temporary directory
+  file:
+    path: "{{ xrt_tmp.path }}"
+    state: absent
+  when: xrt_tmp.path is defined
