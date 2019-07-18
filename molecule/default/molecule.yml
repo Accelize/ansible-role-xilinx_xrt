@@ -1,26 +1,76 @@
 ---
-# Default scenario that does not require a FPGA device to run.
 
 dependency:
   name: galaxy
+
 driver:
   name: docker
+
 lint:
   name: yamllint
+
 platforms:
-  - name: ubuntu_bionic
+  - name: ubuntu_bionic-2019.1
     image: ubuntu:bionic
-    privileged: true
-  - name: ubuntu_xenial
+    groups:
+      - xrt_2019.1
+
+  - name: ubuntu_bionic-2018.3
+    image: ubuntu:bionic
+    groups:
+      - xrt_2018.3
+
+  - name: ubuntu_bionic-2018.2
+    image: ubuntu:bionic
+    groups:
+      - xrt_2018.2
+
+  - name: ubuntu_xenial-2019.1
     image: ubuntu:xenial
-    privileged: true
-  - name: centos_7
+    groups:
+      - xrt_2019.1
+
+  - name: ubuntu_xenial-2018.3
+    image: ubuntu:xenial
+    groups:
+      - xrt_2018.3
+
+  - name: ubuntu_xenial-2018.2
+    image: ubuntu:xenial
+    groups:
+      - xrt_2018.2
+
+  - name: centos_7-2019.1
     image: centos:7
-    privileged: true
+    groups:
+      - xrt_2019.1
+
+  - name: centos_7-2018.3
+    image: centos:7
+    groups:
+      - xrt_2018.3
+
+  - name: centos_7-2018.2
+    image: centos:7
+    groups:
+      - xrt_2018.2
+
 provisioner:
   name: ansible
   lint:
     name: ansible-lint
+  inventory:
+    group_vars:
+      xrt_2019.1:
+        xilinx_xrt_version: 2019.1
+        xilinx_xrt_aws: true
+      xrt_2018.3:
+        xilinx_xrt_version: 2018.3
+        xilinx_xrt_aws: true
+      xrt_2018.2:
+        xilinx_xrt_version: 2018.2
+        xilinx_xrt_aws: false
+
 verifier:
   name: testinfra
   lint:

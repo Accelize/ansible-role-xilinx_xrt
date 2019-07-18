@@ -2,6 +2,9 @@
 # Xilinx XRT version to install
 xilinx_xrt_version: 2019.1
 
+# Install the AWS extension to XRT
+xilinx_xrt_aws: false
+
 # Internals variables
 # -------------------
 
@@ -22,8 +25,15 @@ xilinx_xrt_packages:
 rhel7_distribution_version: 7.4.1708
 
 # Packages filenames
-xrt_deb: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
-                  {{ ansible_distribution_version }}-xrt.deb"
-xrt_rpm: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
-                  {{ rhel7_distribution_version }}-xrt.rpm"
+prefix_deb: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
+             {{ ansible_distribution_version }}-"
+prefix_rpm: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
+             {{ rhel7_distribution_version }}-"
+
+xrt_deb: "{{ prefix_deb }}xrt.deb"
+xrt_rpm: "{{ prefix_rpm }}xrt.rpm"
 xrt_package: "{{ (ansible_os_family == 'Debian') | ternary(xrt_deb, xrt_rpm) }}"
+
+aws_deb: "{{ prefix_deb }}aws.deb"
+aws_rpm: "{{ prefix_rpm }}aws.rpm"
+aws_package: "{{ (ansible_os_family == 'Debian') | ternary(aws_deb, aws_rpm) }}"

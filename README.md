@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Accelize/ansible-role-xilinx-xrt.svg?branch=master)](https://travis-ci.org/Accelize/ansible-role-xilinx-xrt)
+[![Build Status](https://travis-ci.org/Accelize/ansible-role-xilinx_xrt.svg?branch=master)](https://travis-ci.org/Accelize/ansible-role-xilinx_xrt)
 
 Xilinx XRT Ansible Role
 =======================
@@ -16,6 +16,7 @@ Role Variables
 --------------
 
 * **xilinx_xrt_version**: Xilinx XRT version to install. Default to `2018.3`.
+* **xilinx_xrt_aws**: If `true`, also install AWS XRT package. Default to `false`.
 
 Example Playbook
 ----------------
