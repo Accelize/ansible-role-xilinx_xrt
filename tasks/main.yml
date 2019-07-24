@@ -5,6 +5,14 @@
     path: /opt/xilinx/xrt/bin/xbutil
   register: xbutil
 
+- name: Ensure GPG is installed
+  package:
+    name: gnupg
+    state: present
+  retries: 10
+  delay: 1
+  when: not xbutil.stat.exists
+
 - name: Create temporary directory
   tempfile:
     state: directory
