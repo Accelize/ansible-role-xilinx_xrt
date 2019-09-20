@@ -1,6 +1,6 @@
 ---
 # Xilinx XRT version to install
-xilinx_xrt_version: 2019.1
+xilinx_xrt_version: '2019.1'
 
 # Install the AWS extension to XRT
 xilinx_xrt_aws: false
@@ -17,17 +17,17 @@ xilinx_xrt_aws: false
 # Opened Github issue to see if providing packages repositories is possible:
 # See: https://github.com/Xilinx/XRT/issues/1674
 xilinx_xrt_packages:
-  2019.1: 201910.2.2.2173
-  2018.2: 201802.2.1.127
-  2018.3: 201830.2.1.1794
+  '2019.1': 201910.2.2.2250
+  '2018.3': 201830.2.1.1794
+  '2018.2': 201802.2.1.127
 
 # RHEL7/Centos7 packages use a fixed distribution version as suffix
 rhel7_distribution_version: 7.4.1708
 
 # Packages filenames
-prefix_deb: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
+prefix_deb: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version | string] }}_\
              {{ ansible_distribution_version }}-"
-prefix_rpm: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version] }}_\
+prefix_rpm: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version | string] }}_\
              {{ rhel7_distribution_version }}-"
 
 xrt_deb: "{{ prefix_deb }}xrt.deb"
