@@ -63,7 +63,7 @@ provisioner:
     group_vars:
       xrt_2019.1:
         xilinx_xrt_version: 2019.1
-        xilinx_xrt_aws: true
+        xilinx_xrt_aws: false
       xrt_2018.3:
         xilinx_xrt_version: 2018.3
         xilinx_xrt_aws: true
