@@ -17,4 +17,8 @@ galaxy_info:
   galaxy_tags:
     - system
     - fpga
-dependencies: []
+dependencies:
+  - role: accelize.linux_kernel
+    vars:
+      kernel_version: "{{ xrt_linux_kernel_version }}"
+    when: xilinx_xrt_ensure_compatible_kernel | bool
