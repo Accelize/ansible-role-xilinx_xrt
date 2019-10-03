@@ -54,7 +54,8 @@ xrt_kernel_spec:
       '2018.2': 3.10.0-957
   Debian:
     bionic:
-      '2019.1': 4.18.0
+      '2018.3': 4.18.0
+      '2018.2': 4.18.0
 
 xrt_linux_kernel_version: "{{ xilinx_xrt_version | string |
                            xrt_kernel(xrt_kernel_spec, ansible_facts)}}"
