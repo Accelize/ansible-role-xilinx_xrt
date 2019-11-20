@@ -1,6 +1,6 @@
 ---
 # Xilinx XRT version to install
-xilinx_xrt_version: '2019.1'
+xilinx_xrt_version: '2019.2'
 
 # Install the AWS extension to XRT
 xilinx_xrt_aws: false
@@ -8,15 +8,9 @@ xilinx_xrt_aws: false
 # Internals variables
 # -------------------
 
-# No Xilinx repository, It is currently required to hardcode package names if
-# not building from sources
-# - This will not ensure the up to date version of the package is installed
-# - This may become broken at any time
-# If not as reliable, will need to build from source (But this will make install
-# far longer, and require to polute machine with build requirements)
-# Opened Github issue to see if providing packages repositories is possible:
-# See: https://github.com/Xilinx/XRT/issues/1674
+# XRT packages version list
 xilinx_xrt_packages:
+  '2019.2': 201920.2.3.1301
   '2019.1': 201910.2.2.2250
   '2018.3': 201830.2.1.1794
   '2018.2': 201802.2.1.127

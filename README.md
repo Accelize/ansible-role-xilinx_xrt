@@ -15,7 +15,7 @@ The role requires to be run as root on the target host.
 Role Variables
 --------------
 
-* **xilinx_xrt_version**: Xilinx XRT version to install. Default to `2018.3`.
+* **xilinx_xrt_version**: Xilinx XRT version to install. Default to latest available.
 * **xilinx_xrt_aws**: If `true`, also install AWS XRT package. Default to `false`.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible. Default to `true`.
 
