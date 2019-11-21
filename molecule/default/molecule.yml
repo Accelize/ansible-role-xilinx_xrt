@@ -10,6 +10,11 @@ lint:
   name: yamllint
 
 platforms:
+  - name: ubuntu_bionic-2019.2
+    image: ubuntu:bionic
+    groups:
+      - xrt_2019.1
+
   - name: ubuntu_bionic-2019.1
     image: ubuntu:bionic
     groups:
@@ -20,10 +25,23 @@ platforms:
     groups:
       - xrt_2018.3
 
+  - name: ubuntu_bionic-2018.3-aws
+    image: ubuntu:bionic
+    groups:
+      # Warning:
+      # The "aws" package is not provided for all XRT versions by Xilinx
+      - xrt_2018.3
+      - aws
+
   - name: ubuntu_bionic-2018.2
     image: ubuntu:bionic
     groups:
       - xrt_2018.2
+
+  - name: ubuntu_xenial-2019.2
+    image: ubuntu:xenial
+    groups:
+      - xrt_2019.2
 
   - name: ubuntu_xenial-2019.1
     image: ubuntu:xenial
@@ -40,6 +58,11 @@ platforms:
     groups:
       - xrt_2018.2
 
+  - name: centos_7-2019.2
+    image: centos:7
+    groups:
+      - xrt_2019.2
+
   - name: centos_7-2019.1
     image: centos:7
     groups:
@@ -55,21 +78,41 @@ platforms:
     groups:
       - xrt_2018.2
 
+  - name: centos_7-aws
+    image: centos:7
+    groups:
+      - aws
+      # Disabled in Travis-CI:
+      # Download is only authorized from an AWS EC2 instance
+      # - no_xrt
+
+  - name: centos_7-aws_fpga_src
+    image: centos:7
+    groups:
+      - aws_fpga_src
+      - no_xrt
+
 provisioner:
   name: ansible
   lint:
     name: ansible-lint
   inventory:
     group_vars:
+      xrt_2019.2:
+        xilinx_xrt_version: 2019.2
       xrt_2019.1:
         xilinx_xrt_version: 2019.1
-        xilinx_xrt_aws: false
       xrt_2018.3:
         xilinx_xrt_version: 2018.3
-        xilinx_xrt_aws: true
       xrt_2018.2:
         xilinx_xrt_version: 2018.2
-        xilinx_xrt_aws: false
+      no_xrt:
+        xilinx_xrt_install: false
+      aws:
+        xilinx_xrt_env: aws
+      aws_fpga_src:
+        xilinx_xrt_env: aws
+        aws_fpga_src_install: '/opt/aws_fpga'
 
 verifier:
   name: testinfra

@@ -17,8 +17,16 @@ galaxy_info:
   galaxy_tags:
     - system
     - fpga
+    - xilinx
+    - alveo
+    - xrt
+    - aws
+    - ec2
+
 dependencies:
   - role: accelize.linux_kernel
     vars:
-      kernel_version: "{{ xrt_linux_kernel_version }}"
-    when: xilinx_xrt_ensure_compatible_kernel | bool
+      kernel_version: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"
+    when:
+      - xilinx_xrt_ensure_compatible_kernel | bool
+      - xilinx_xrt_install | bool

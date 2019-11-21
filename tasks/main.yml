@@ -4,6 +4,39 @@
   stat:
     path: /opt/xilinx/xrt/bin/xbutil
   register: xbutil
+  when: xilinx_xrt_install | bool
+
+- name: Create temporary directory
+  tempfile:
+    state: directory
+    prefix: xrt_
+  register: xrt_tmp
+  notify: Clean up temporary directory
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+
+- name: Download XRT package
+  get_url:
+    url: "{{ xrt_source }}"
+    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+
+- name: Download XRT package signature
+  get_url:
+    url: "{{ xrt_source }}.sig"
+    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.sig"
+  retries: 10
+  delay: 1
+  failed_when: false  # May be not available
+  register: xrt_package_sig
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
 
 - name: Ensure GPG is installed
   package:
@@ -11,14 +44,10 @@
     state: present
   retries: 10
   delay: 1
-  when: not xbutil.stat.exists
-
-- name: Create temporary directory
-  tempfile:
-    state: directory
-    prefix: xrt_
-  register: xrt_tmp
-  when: not xbutil.stat.exists
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - xrt_package_sig.changed
 
 - name: Download Xilinx master signing key
   get_url:
@@ -26,35 +55,49 @@
     dest: "{{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
   retries: 10
   delay: 1
-  when: not xbutil.stat.exists
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - xrt_package_sig.changed
 
-- name: Ensure Xilinx master signing key is imported
+- name: Ensure Xilinx master signing key is imported in GPG
   command: "gpg --import {{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
-  when: not xbutil.stat.exists
-
-- name: Download XRT package from Xilinx website
-  get_url:
-    url: "https://www.xilinx.com/bin/public/openDownload?filename={{ item }}"
-    dest: "{{ xrt_tmp.path }}/{{ item }}"
-  with_items:
-    - "{{ xrt_package }}"
-    - "{{ xrt_package }}.digests"
-    - "{{ xrt_package }}.sig"
-  retries: 10
-  delay: 1
-  when: not xbutil.stat.exists
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - xrt_package_sig.changed
 
 - name: Verify XRT package signature
   command: "gpg --verify {{ xrt_package }}.sig {{ xrt_package }}"
   args:
     chdir: "{{ xrt_tmp.path }}"
-  when: not xbutil.stat.exists
+  changed_when: false
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - xrt_package_sig.changed
+
+- name: Download XRT package checksum
+  get_url:
+    url: "{{ xrt_source }}.digests"
+    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.digests"
+  retries: 10
+  delay: 1
+  failed_when: false  # May be not available
+  register: xrt_package_digests
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
 
 - name: Verify XRT package checksum
   command: sha512sum -c {{ xrt_package }}.digests
   args:
     chdir: "{{ xrt_tmp.path }}"
-  when: not xbutil.stat.exists
+  changed_when: false
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - xrt_package_digests.changed
 
 - name: Ensure EPEL repository is installed
   yum:
@@ -63,64 +106,34 @@
     install_weak_deps: false
   retries: 10
   delay: 1
-  when: ansible_os_family == 'RedHat'
-
-- name: Ensure XRT DEB package is installed
-  package:
-    deb: "{{ xrt_tmp.path }}/{{ xrt_package }}"
-    state: present
-    install_recommends: false
-  when: ansible_os_family == 'Debian' and not xbutil.stat.exists
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - ansible_os_family == 'RedHat'
 
 - name: Ensure XRT RPM package is installed
   yum:
     name: "{{ xrt_tmp.path }}/{{ xrt_package }}"
     state: present
     install_weak_deps: false
-  when: ansible_os_family == 'RedHat' and not xbutil.stat.exists
-
-- name: Download AWS XRT package from Xilinx website
-  get_url:
-    url: "https://www.xilinx.com/bin/public/openDownload?filename={{ item }}"
-    dest: "{{ xrt_tmp.path }}/{{ item }}"
-  with_items:
-    - "{{ aws_package }}"
-    - "{{ aws_package }}.digests"
-    - "{{ aws_package }}.sig"
   retries: 10
   delay: 1
-  when: (xilinx_xrt_aws | bool) and not xbutil.stat.exists
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'RedHat'
+    - not xbutil.stat.exists
 
-- name: Verify AWS XRT package signature
-  command: "gpg --verify {{ aws_package }}.sig {{ aws_package }}"
-  args:
-    chdir: "{{ xrt_tmp.path }}"
-  when: (xilinx_xrt_aws | bool) and not xbutil.stat.exists
-
-- name: Verify AWS XRT package checksum
-  command: sha512sum -c {{ aws_package }}.digests
-  args:
-    chdir: "{{ xrt_tmp.path }}"
-  when: (xilinx_xrt_aws | bool) and not xbutil.stat.exists
-
-- name: Ensure AWS XRT DEB package is installed
+- name: Ensure XRT DEB package is installed
   package:
-    deb: "{{ xrt_tmp.path }}/{{ aws_package }}"
+    deb: "{{ xrt_tmp.path }}/{{ xrt_package }}"
     state: present
     install_recommends: false
-  when: "(xilinx_xrt_aws | bool) and (ansible_os_family == 'Debian') and
-         not xbutil.stat.exists"
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'Debian'
+    - not xbutil.stat.exists
 
-- name: Ensure AWS XRT RPM package is installed
-  yum:
-    name: "{{ xrt_tmp.path }}/{{ aws_package }}"
-    state: present
-    install_weak_deps: false
-  when: "(xilinx_xrt_aws | bool) and (ansible_os_family == 'RedHat') and
-         not xbutil.stat.exists"
-
-- name: Clean up temporary directory
-  file:
-    path: "{{ xrt_tmp.path }}"
-    state: absent
-  when: xrt_tmp.path is defined
+- include_tasks: aws.yml
+  when: xilinx_xrt_env == 'aws'

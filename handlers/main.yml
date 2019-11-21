@@ -1,0 +1,11 @@
+---
+
+- name: Clean up temporary directory
+  file:
+    path: "{{ xrt_tmp.path }}"
+    state: absent
+
+- name: Clean up AWS temporary directory
+  file:
+    path: "{{ aws_tmp.path }}"
+    state: absent

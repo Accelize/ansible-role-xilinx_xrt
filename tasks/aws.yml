@@ -1,0 +1,180 @@
+---
+
+- name: Download XRT AWS package
+  get_url:
+    url: "{{ aws_source }}"
+    dest: "{{ xrt_tmp.path }}/{{ aws_package }}"
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+
+- name: Download XRT AWS package signature
+  get_url:
+    url: "{{ aws_source }}.sig"
+    dest: "{{ xrt_tmp.path }}/{{ aws_package }}.sig"
+  retries: 10
+  delay: 1
+  failed_when: false  # May be not available
+  register: aws_package_sig
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+
+- name: Verify XRT AWS package signature
+  command: "gpg --verify {{ aws_package }}.sig {{ aws_package }}"
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - aws_package_sig.changed
+
+- name: Download XRT AWS package checksum
+  get_url:
+    url: "{{ aws_source }}.digests"
+    dest: "{{ xrt_tmp.path }}/{{ aws_package }}.digests"
+  retries: 10
+  delay: 1
+  failed_when: false  # May be not available
+  register: aws_package_digests
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+
+- name: Verify XRT AWS package checksum
+  command: sha512sum -c {{ xrt_package }}.digests
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - aws_package_digests.changed
+
+- name: Ensure AWS XRT DEB package is installed
+  package:
+    deb: "{{ xrt_tmp.path }}/{{ aws_package }}"
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'Debian'
+    - not xbutil.stat.exists
+
+- name: Ensure AWS XRT RPM package is installed
+  yum:
+    name: "{{ xrt_tmp.path }}/{{ aws_package }}"
+    state: present
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'RedHat'
+    - not xbutil.stat.exists
+
+- name: Get "/usr/local/lib64" directory information
+  stat:
+    path: /usr/local/lib64
+  register: usr_local_lib64
+  when: aws_fpga_install | bool
+
+- name: Get "libfpga_mgmt.so" file information
+  stat:
+    path: "/usr/local/{{ usr_local_lib64.stat.exists |
+           ternary('lib64','lib') }}/libfpga_mgmt.so"
+  register: libfpga_mgmt
+  when: aws_fpga_install | bool
+
+- name: Create AWS temporary directory
+  tempfile:
+    state: directory
+    prefix: aws_
+  register: aws_tmp
+  when:
+    - aws_fpga_install | bool
+    - aws_fpga_src_install is not defined
+    - not libfpga_mgmt.stat.exists
+  notify: Clean up AWS temporary directory
+
+- name: Set AWS FPGA source directory
+  set_fact:
+    aws_fpga_src: "{{ aws_tmp.path }}"
+  when:
+    - aws_fpga_install | bool
+    - aws_fpga_src_install is not defined
+    - not libfpga_mgmt.stat.exists
+
+- name: Set AWS FPGA source directory
+  set_fact:
+    aws_fpga_src: "{{ aws_fpga_src_install }}"
+  when: aws_fpga_src_install is defined
+
+- name: Ensure AWS FPGA source directory exists
+  file:
+    state: directory
+    path: "{{ aws_fpga_src }}"
+  when: "aws_fpga_src_install is defined or (
+         aws_fpga_install | bool and not libfpga_mgmt.stat.exists)"
+
+- name: Download and extract AWS FPGA release tarbal
+  unarchive:
+    src: "https://api.github.com/repos/aws/aws-fpga/tarball/\
+          {{ aws_fpga_version | default('') }}"
+    dest: "{{ aws_fpga_src }}"
+    remote_src: true
+    extra_opts: ['--strip-components=1']
+  retries: 10
+  delay: 1
+  when: "aws_fpga_src_install is defined or (
+         aws_fpga_install | bool and not libfpga_mgmt.stat.exists)"
+
+- name: Ensure AWS FPGA build dependencies are present
+  apt:
+    name:
+      - gcc
+      - libc-dev
+      - make
+      - pciutils
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  when:
+    - aws_fpga_install | bool
+    - ansible_os_family == 'Debian'
+    - not libfpga_mgmt.stat.exists
+
+- name: Ensure AWS FPGA build dependencies are present
+  yum:
+    name:
+      - gcc
+      - make
+      - pciutils
+    state: present
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  when:
+    - aws_fpga_install | bool
+    - ansible_os_family == 'RedHat'
+    - not libfpga_mgmt.stat.exists
+
+- name: Build and install AWS FPGA libraries and utilities
+  shell: "source {{ aws_fpga_src }}/sdk_setup.sh;"
+  environment:
+    AWS_FPGA_ALLOW_NON_ROOT: "{{ aws_fpga_allow_non_root or '' }}"
+    AWS_FPGA_SDK_GROUP: "{{ aws_fpga_sdk_group }}"
+    AWS_FPGA_SDK_OVERRIDE_GROUP: "{{ aws_fpga_sdk_override_group or '' }}"
+  args:
+    creates: "/usr/local/{{ usr_local_lib64.stat.exists |
+              ternary('lib64','lib') }}/libfpga_mgmt.so"
+    executable: /bin/bash
+  when:
+    - aws_fpga_install | bool
+    - not libfpga_mgmt.stat.exists

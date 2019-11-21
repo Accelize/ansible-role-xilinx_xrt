@@ -1,55 +1,33 @@
 ---
-# Xilinx XRT version to install
-xilinx_xrt_version: '2019.2'
+# Install Xilinx XRT
+xilinx_xrt_install: true
 
-# Install the AWS extension to XRT
-xilinx_xrt_aws: false
+# Xilinx XRT environement, default to Xilinx classical environement
+xilinx_xrt_env: ''
 
-# Internals variables
-# -------------------
-
-# XRT packages version list
-xilinx_xrt_packages:
-  '2019.2': 201920.2.3.1301
-  '2019.1': 201910.2.2.2250
-  '2018.3': 201830.2.1.1794
-  '2018.2': 201802.2.1.127
-
-# RHEL7/Centos7 packages use a fixed distribution version as suffix
-rhel7_distribution_version: 7.4.1708
-
-# Packages filenames
-prefix_deb: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version | string] }}_\
-             {{ ansible_distribution_version }}-"
-prefix_rpm: "xrt_{{ xilinx_xrt_packages[xilinx_xrt_version | string] }}_\
-             {{ rhel7_distribution_version }}-"
-
-xrt_deb: "{{ prefix_deb }}xrt.deb"
-xrt_rpm: "{{ prefix_rpm }}xrt.rpm"
-xrt_package: "{{ (ansible_os_family == 'Debian') | ternary(xrt_deb, xrt_rpm) }}"
-
-aws_deb: "{{ prefix_deb }}aws.deb"
-aws_rpm: "{{ prefix_rpm }}aws.rpm"
-aws_package: "{{ (ansible_os_family == 'Debian') | ternary(aws_deb, aws_rpm) }}"
+# Xilinx XRT version to install (Default to latest available
+xilinx_xrt_version: "{{ xilinx_xrt_env | xrt_latest(ansible_facts)}}"
 
 # Linux kernel version compatibles with XRT
 xilinx_xrt_ensure_compatible_kernel: true
 
-xrt_kernel_spec:
-  # Kernel version is get from following values
-  # - First level: "ansible_os_family"
-  # - Second level on RedHat: "ansible_distribution_major_version"
-  # - Second level on Debian: "ansible_distribution_release" (lower cased)
-  # - Third level: "xilinx_xrt_version"
-  RedHat:
-    '7':
-      '2019.1': 3.10.0-1062
-      '2018.3': 3.10.0-957
-      '2018.2': 3.10.0-957
-  Debian:
-    bionic:
-      '2018.3': 4.18.0
-      '2018.2': 4.18.0
+# If true and xilinx_xrt_env is "aws", install AWS FPGA runtimes
+aws_fpga_install: true
 
-xrt_linux_kernel_version: "{{ xilinx_xrt_version | string |
-                           xrt_kernel(xrt_kernel_spec, ansible_facts)}}"
+# AWS: Allow access to FPGA for users in "aws_fpga_sdk_group" group
+aws_fpga_allow_non_root: false
+aws_fpga_sdk_group: fpgauser
+aws_fpga_sdk_override_group: false
+
+# Internals variables
+# -------------------
+
+xrt_package: "{{ xilinx_xrt_version |
+              xrt_pkg_name('xrt', xilinx_xrt_env, ansible_facts)}}"
+xrt_source: "{{ xilinx_xrt_version |
+             xrt_pkg_src('xrt', xilinx_xrt_env, ansible_facts)}}"
+
+aws_package: "{{ xilinx_xrt_version |
+              xrt_pkg_name('aws', xilinx_xrt_env, ansible_facts)}}"
+aws_source: "{{ xilinx_xrt_version |
+             xrt_pkg_src('aws', xilinx_xrt_env, ansible_facts)}}"
