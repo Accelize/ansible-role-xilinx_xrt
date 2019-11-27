@@ -111,6 +111,23 @@
     - not xbutil.stat.exists
     - ansible_os_family == 'RedHat'
 
+- name: Ensure Kernel headers RPM are installed
+  yum:
+    name:
+      - "kernel-devel-{{ ansible_kernel }}"
+      - "kernel-headers-{{ ansible_kernel }}"
+    state: present
+    install_weak_deps: false
+    enablerepo: C7.*
+  retries: 10
+  delay: 1
+  when:
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - ansible_os_family == 'RedHat'
+  tags:
+    - molecule-notest  # Bad detected kernel version from container
+
 - name: Ensure XRT RPM package is installed
   yum:
     name: "{{ xrt_tmp.path }}/{{ xrt_package }}"
@@ -123,6 +140,25 @@
     - ansible_os_family == 'RedHat'
     - not xbutil.stat.exists
 
+- name: Ensure APT cache is up to date
+  apt:
+    update_cache: true
+  changed_when: false
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'Debian'
+    - not xbutil.stat.exists
+
+- name: Ensure Kernel headers DEB are installed
+  apt:
+    name: "linux-headers-{{ ansible_kernel }}-generic"
+  when:
+    - xilinx_xrt_install | bool
+    - ansible_os_family == 'Debian'
+    - not xbutil.stat.exists
+  tags:
+    - molecule-notest  # Bad detected kernel version from container
+
 - name: Ensure XRT DEB package is installed
   package:
     deb: "{{ xrt_tmp.path }}/{{ xrt_package }}"
@@ -134,6 +170,15 @@
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
     - not xbutil.stat.exists
+
+- name: Ensure XRT is sourced in ~/.bashrc
+  lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    regexp: "^source /opt/xilinx/xrt/setup.sh"
+    line: source /opt/xilinx/xrt/setup.sh
+  when:
+    - xilinx_xrt_install | bool
+    - xilinx_xrt_bashrc | bool
 
 - include_tasks: aws.yml
   when: xilinx_xrt_env == 'aws'

@@ -23,6 +23,8 @@ CentOS 7 is recommanded on AWS since AWS only provides packages for it.
   Default to the classical Xilinx XRT environment.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible.
   Default to `true`.
+* **xilinx_xrt_bashrc**: If `true`, add the source of the XRT setup script to the user `~/.bashrc`.
+  Default to `false`.
 
 ### AWS FPGA
 

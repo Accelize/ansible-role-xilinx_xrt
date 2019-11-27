@@ -2,6 +2,9 @@
 # Install Xilinx XRT
 xilinx_xrt_install: true
 
+# Add "source /opt/xilinx/xrt/setup.sh" to user "~/.bashrc"
+xilinx_xrt_bashrc: false
+
 # Xilinx XRT environement, default to Xilinx classical environement
 xilinx_xrt_env: ''
 
