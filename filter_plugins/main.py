@@ -10,6 +10,7 @@ _PACKAGES = {
 
 # Packages from AWS developer AMI, CentOS7 only
 _AWS_PACKAGES = {
+    '2019.2': ('1.8.0/Patches/XRT_2019_2/', 'xrt_201920.2.3.0_7.7.1908'),
     '2019.1': ('1.7.0/Patches/XRT_2019_1_RC2/', 'xrt_201910.2.2.0_7.6.1810'),
     '2018.3': ('1.6.0/Patches/XRT_2018_3_RC5/', 'xrt_201830.2.1.0_7.6.1810'),
     '2018.2': ('1.5.0/Patches/XRT_2018_2_XDF_RC5/', 'xrt_201802.2.1.0_7.5.1804')
