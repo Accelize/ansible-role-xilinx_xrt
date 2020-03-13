@@ -2,7 +2,8 @@
 
 # Packages from Xilinx website
 _PACKAGES = {
-    '2019.2': 'xrt_201920.2.3.1301',
+    '2020.1': 'xrt_202010.2.5.227',
+    '2019.2': 'xrt_201920.2.5.309',
     '2019.1': 'xrt_201910.2.2.2250',
     '2018.3': 'xrt_201830.2.1.1794',
     '2018.2': 'xrt_201802.2.1.127'
@@ -66,6 +67,9 @@ def _pkg_info(version, name, env, ansible_facts):
             '7.4.1708' if is_rhel7 else
             # Ubuntu packages use distribution version (ex: "18.04")
             ansible_facts['distribution_version'])
+        if version >= "2019.2":
+            # Architecture information
+            dist += '-x86_64' if family == 'RedHat' else '-amd64'
 
     # Define the package file name
     package = ''.join((

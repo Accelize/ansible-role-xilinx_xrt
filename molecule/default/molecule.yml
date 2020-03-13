@@ -6,77 +6,89 @@ dependency:
 driver:
   name: docker
 
-lint:
-  name: yamllint
-
 platforms:
+  - name: ubuntu_bionic-2020.1
+    image: ubuntu:bionic
+    groups:
+      - xrt_2020_1
+
   - name: ubuntu_bionic-2019.2
     image: ubuntu:bionic
     groups:
-      - xrt_2019.1
+      - xrt_2019_2
 
   - name: ubuntu_bionic-2019.1
     image: ubuntu:bionic
     groups:
-      - xrt_2019.1
+      - xrt_2019_1
 
   - name: ubuntu_bionic-2018.3
     image: ubuntu:bionic
     groups:
-      - xrt_2018.3
+      - xrt_2018_3
 
   - name: ubuntu_bionic-2018.3-aws
     image: ubuntu:bionic
     groups:
       # Warning:
       # The "aws" package is not provided for all XRT versions by Xilinx
-      - xrt_2018.3
+      - xrt_2018_3
       - aws
 
   - name: ubuntu_bionic-2018.2
     image: ubuntu:bionic
     groups:
-      - xrt_2018.2
+      - xrt_2018_2
+
+  - name: ubuntu_xenial-2020.1
+    image: ubuntu:xenial
+    groups:
+      - xrt_2020_1
 
   - name: ubuntu_xenial-2019.2
     image: ubuntu:xenial
     groups:
-      - xrt_2019.2
+      - xrt_2019_2
 
   - name: ubuntu_xenial-2019.1
     image: ubuntu:xenial
     groups:
-      - xrt_2019.1
+      - xrt_2019_1
 
   - name: ubuntu_xenial-2018.3
     image: ubuntu:xenial
     groups:
-      - xrt_2018.3
+      - xrt_2018_3
 
   - name: ubuntu_xenial-2018.2
     image: ubuntu:xenial
     groups:
-      - xrt_2018.2
+      - xrt_2018_2
+
+  - name: centos_7-2020.1
+    image: centos:7
+    groups:
+      - xrt_2020_1
 
   - name: centos_7-2019.2
     image: centos:7
     groups:
-      - xrt_2019.2
+      - xrt_2019_2
 
   - name: centos_7-2019.1
     image: centos:7
     groups:
-      - xrt_2019.1
+      - xrt_2019_1
 
   - name: centos_7-2018.3
     image: centos:7
     groups:
-      - xrt_2018.3
+      - xrt_2018_3
 
   - name: centos_7-2018.2
     image: centos:7
     groups:
-      - xrt_2018.2
+      - xrt_2018_2
 
   - name: centos_7-aws
     image: centos:7
@@ -84,7 +96,7 @@ platforms:
       - aws
       # Disabled in Travis-CI:
       # Download is only authorized from an AWS EC2 instance
-      # - no_xrt
+      - no_xrt
 
   - name: centos_7-aws_fpga_src
     image: centos:7
@@ -94,17 +106,17 @@ platforms:
 
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
   inventory:
     group_vars:
-      xrt_2019.2:
+      xrt_2020_1:
+        xilinx_xrt_version: 2020.1
+      xrt_2019_2:
         xilinx_xrt_version: 2019.2
-      xrt_2019.1:
+      xrt_2019_1:
         xilinx_xrt_version: 2019.1
-      xrt_2018.3:
+      xrt_2018_3:
         xilinx_xrt_version: 2018.3
-      xrt_2018.2:
+      xrt_2018_2:
         xilinx_xrt_version: 2018.2
       no_xrt:
         xilinx_xrt_install: false
@@ -116,5 +128,3 @@ provisioner:
 
 verifier:
   name: testinfra
-  lint:
-    name: flake8

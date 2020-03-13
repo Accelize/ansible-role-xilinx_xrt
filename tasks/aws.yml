@@ -19,6 +19,7 @@
   failed_when: false  # May be not available
   register: aws_package_sig
   when:
+    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
@@ -41,6 +42,7 @@
   failed_when: false  # May be not available
   register: aws_package_digests
   when:
+    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
