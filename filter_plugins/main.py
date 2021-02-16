@@ -59,7 +59,7 @@ def _pkg_info(version, name, env, ansible_facts):
     if env == 'aws' and is_rhel7:
         path, core = _AWS_PACKAGES[version]
         base_url = 'https://aws-fpga-developer-ami.s3.amazonaws.com/'
-        dist = ''  # Included in package name
+        dist = '-x86_64'
     else:
         core = _PACKAGES[version]
         base_url = 'https://www.xilinx.com/bin/public/openDownload?filename='
