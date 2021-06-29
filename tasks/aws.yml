@@ -71,6 +71,7 @@
     name: "{{ xrt_tmp.path }}/{{ aws_package }}"
     state: present
     install_weak_deps: false
+    disable_gpg_check: true
   retries: 10
   delay: 1
   register: _xrt_aws_rpm

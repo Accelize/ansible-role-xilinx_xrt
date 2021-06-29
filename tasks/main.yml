@@ -113,9 +113,11 @@
 
 - name: Ensure EPEL repository is installed
   yum:
-    name: epel-release
+    name: "https://dl.fedoraproject.org/pub/epel/\
+           epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
     install_weak_deps: false
+    disable_gpg_check: true
   retries: 10
   delay: 1
   register: _epel
@@ -124,6 +126,60 @@
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
     - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version in ("7", "8")
+
+- name: Ensure RHEL optional RPMs repository is enabled
+  command:
+    cmd: subscription-manager repos --enable "rhel-7-server-optional-rpms"
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "Red Hat Enterprise Linux"
+    - ansible_distribution_major_version == "7"
+
+- name: Ensure CodeReady Linux Builder repository is enabled
+  command:
+    cmd: subscription-manager repos --enable "codeready-builder-for-rhel-8-x86_64-rpms"
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "Red Hat Enterprise Linux"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure DNF core plugins are installed
+  dnf:
+    state: present
+    name: python3-dnf-plugins-core
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _dnf_plugins
+  until: _dnf_plugins is successful
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure Powertools repository is enabled
+  command:
+    cmd: dnf config-manager --set-enabled powertools
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure AppStream repository is enabled
+  command:
+    cmd: dnf config-manager --set-enabled appstream
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
 
 - name: Ensure Kernel headers RPM are installed
   yum:
@@ -149,6 +205,7 @@
     name: "{{ xrt_tmp.path }}/{{ xrt_package }}"
     state: present
     install_weak_deps: false
+    disable_gpg_check: true
   retries: 10
   delay: 1
   register: _xrt_rpm
