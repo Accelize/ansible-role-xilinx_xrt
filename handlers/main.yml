@@ -9,3 +9,10 @@
   file:
     path: "{{ aws_tmp.path }}"
     state: absent
+
+- name: Ensure Xilinx Management Proxy Daemon is started and enabled at boot
+  service:
+    name: mpd
+    enabled: true
+    state: started
+  failed_when: false  # Service is not present in all versions

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Accelize/ansible-role-xilinx_xrt.svg?branch=master)](https://travis-ci.org/Accelize/ansible-role-xilinx_xrt)
+[![Build Status](https://dev.azure.com/Accelize/DRM/_apis/build/status/Accelize.ansible-role-xilinx_xrt?branchName=Update)](https://dev.azure.com/Accelize/DRM/_build/latest?definitionId=25&branchName=Update)
 
 # Xilinx XRT Ansible Role
 
@@ -10,7 +10,7 @@ A compatible Xilinx FPGA device is required on the target host.
 
 The role requires to be run as root on the target host.
 
-CentOS 7 is recommanded on AWS since AWS only provides packages for it.
+CentOS 7 is recommended on AWS since AWS only provides packages for it.
 
 ## Role Variables
 

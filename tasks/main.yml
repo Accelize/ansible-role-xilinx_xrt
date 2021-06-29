@@ -1,5 +1,14 @@
 ---
 
+- name: Ensure Linux kernel version is compatible
+  include_role:
+    name: accelize.linux_kernel
+  vars:
+    kernel_version: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"
+  when:
+    - xilinx_xrt_ensure_compatible_kernel | bool
+    - xilinx_xrt_install | bool
+
 - name: Get "xbutil" file information
   stat:
     path: /opt/xilinx/xrt/bin/xbutil
@@ -22,6 +31,9 @@
     dest: "{{ xrt_tmp.path }}/{{ xrt_package }}"
   retries: 10
   delay: 1
+  register: _xrt
+  until: _xrt is successful
+  notify: Ensure Xilinx Management Proxy Daemon is started and enabled at boot
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -30,12 +42,9 @@
   get_url:
     url: "{{ xrt_source }}.sig"
     dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.sig"
-  retries: 10
-  delay: 1
   failed_when: false  # May be not available
   register: xrt_package_sig
   when:
-    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
@@ -45,6 +54,8 @@
     state: present
   retries: 10
   delay: 1
+  register: _gpg
+  until: _gpg is successful
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -56,6 +67,8 @@
     dest: "{{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
   retries: 10
   delay: 1
+  register: _xilinx_key
+  until: _xilinx_key is successful
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -82,12 +95,9 @@
   get_url:
     url: "{{ xrt_source }}.digests"
     dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.digests"
-  retries: 10
-  delay: 1
   failed_when: false  # May be not available
   register: xrt_package_digests
   when:
-    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
@@ -108,6 +118,8 @@
     install_weak_deps: false
   retries: 10
   delay: 1
+  register: _epel
+  until: _epel is successful
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -123,6 +135,8 @@
     enablerepo: C7.*
   retries: 10
   delay: 1
+  register: _kernel_rpm
+  until: _kernel_rpm is successful
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -137,6 +151,8 @@
     install_weak_deps: false
   retries: 10
   delay: 1
+  register: _xrt_rpm
+  until: _xrt_rpm is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'RedHat'
@@ -146,6 +162,10 @@
   apt:
     update_cache: true
   changed_when: false
+  retries: 10
+  delay: 1
+  register: _apt_cache
+  until: _apt_cache is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
@@ -154,6 +174,10 @@
 - name: Ensure Kernel headers DEB are installed
   apt:
     name: "linux-headers-{{ ansible_kernel }}-generic"
+  retries: 10
+  delay: 1
+  register: _kernel_deb
+  until: _kernel_deb is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
@@ -168,6 +192,8 @@
     install_recommends: false
   retries: 10
   delay: 1
+  register: _xrt_deb
+  until: _xrt_deb is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'

@@ -6,6 +6,8 @@
     dest: "{{ xrt_tmp.path }}/{{ aws_package }}"
   retries: 10
   delay: 1
+  register: _xrt_aws
+  until: _xrt_aws is successful
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
@@ -14,12 +16,9 @@
   get_url:
     url: "{{ aws_source }}.sig"
     dest: "{{ xrt_tmp.path }}/{{ aws_package }}.sig"
-  retries: 10
-  delay: 1
   failed_when: false  # May be not available
   register: aws_package_sig
   when:
-    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
@@ -37,12 +36,9 @@
   get_url:
     url: "{{ aws_source }}.digests"
     dest: "{{ xrt_tmp.path }}/{{ aws_package }}.digests"
-  retries: 10
-  delay: 1
   failed_when: false  # May be not available
   register: aws_package_digests
   when:
-    - false  # Disabled, fails on all packages since 2019.2
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
@@ -63,6 +59,8 @@
     install_recommends: false
   retries: 10
   delay: 1
+  register: _xrt_aws_deb
+  until: _xrt_aws_deb is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
@@ -75,6 +73,8 @@
     install_weak_deps: false
   retries: 10
   delay: 1
+  register: _xrt_aws_rpm
+  until: _xrt_aws_rpm is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'RedHat'
@@ -133,6 +133,8 @@
     extra_opts: ['--strip-components=1']
   retries: 10
   delay: 1
+  register: _aws_fpga_tar
+  until: _aws_fpga_tar is successful
   when: "aws_fpga_src_install is defined or (
          aws_fpga_install | bool and not libfpga_mgmt.stat.exists)"
 
@@ -147,6 +149,8 @@
     install_recommends: false
   retries: 10
   delay: 1
+  register: _aws_fpga_deb_deps
+  until: _aws_fpga_deb_deps is successful
   when:
     - aws_fpga_install | bool
     - ansible_os_family == 'Debian'
@@ -162,6 +166,8 @@
     install_weak_deps: false
   retries: 10
   delay: 1
+  register: _aws_fpga_rpm_deps
+  until: _aws_fpga_rpm_deps is successful
   when:
     - aws_fpga_install | bool
     - ansible_os_family == 'RedHat'

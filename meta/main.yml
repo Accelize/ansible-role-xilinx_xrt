@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   role_name: xilinx_xrt
+  namespace: Accelize
   author: Accelize
   description: 'This Ansible role install the Xilinx XRT.'
   company: Accelize
@@ -10,10 +11,12 @@ galaxy_info:
     - name: EL
       versions:
         - 7
+        - 8
     - name: Ubuntu
       versions:
         - xenial
         - bionic
+        - focal
   galaxy_tags:
     - system
     - fpga
@@ -22,11 +25,3 @@ galaxy_info:
     - xrt
     - aws
     - ec2
-
-dependencies:
-  - role: accelize.linux_kernel
-    vars:
-      kernel_version: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"
-    when:
-      - xilinx_xrt_ensure_compatible_kernel | bool
-      - xilinx_xrt_install | bool

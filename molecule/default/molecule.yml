@@ -7,6 +7,16 @@ driver:
   name: docker
 
 platforms:
+  - name: ubuntu_focal-2021.1
+    image: ubuntu:focal
+    groups:
+      - xrt_2021.1
+
+  - name: ubuntu_bionic-2020.2
+    image: ubuntu:bionic
+    groups:
+      - xrt_2020_2
+
   - name: ubuntu_bionic-2020.1
     image: ubuntu:bionic
     groups:
@@ -94,8 +104,7 @@ platforms:
     image: centos:7
     groups:
       - aws
-      # Disabled in Travis-CI:
-      # Download is only authorized from an AWS EC2 instance
+      # XRT Disabled: Download is only authorized from an AWS EC2 instance
       - no_xrt
 
   - name: centos_7-aws_fpga_src
@@ -108,6 +117,10 @@ provisioner:
   name: ansible
   inventory:
     group_vars:
+      xrt_2021_1:
+        xilinx_xrt_version: 2021.1
+      xrt_2020_2:
+        xilinx_xrt_version: 2020.2
       xrt_2020_1:
         xilinx_xrt_version: 2020.1
       xrt_2019_2:

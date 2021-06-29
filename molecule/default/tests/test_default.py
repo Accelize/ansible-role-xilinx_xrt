@@ -6,23 +6,24 @@ import pytest
 import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
-    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
+    os.environ["MOLECULE_INVENTORY_FILE"]
+).get_hosts("all")
 
 
 def _aws_only(host):
     """
     Skip test if not on AWS environment.
     """
-    if host.ansible.get_variables().get('xilinx_xrt_env') != 'aws':
-        pytest.skip('Not on AWS environment')
+    if host.ansible.get_variables().get("xilinx_xrt_env") != "aws":
+        pytest.skip("Not on AWS environment")
 
 
 def _xrt_installed_only(host):
     """
     Skip test if not on AWS environment.
     """
-    if not host.ansible.get_variables().get('xilinx_xrt_install', True):
-        pytest.skip('XRT not installed')
+    if not host.ansible.get_variables().get("xilinx_xrt_install", True):
+        pytest.skip("XRT not installed")
 
 
 def test_xrt_installed(host):
@@ -48,11 +49,13 @@ def test_aws_fpga_runtime_installed(host):
     """
     _aws_only(host)
 
-    if not host.ansible.get_variables().get('aws_fpga_install'):
-        pytest.skip('AWS FPGA runtime not installed')
+    if not host.ansible.get_variables().get("aws_fpga_install"):
+        pytest.skip("AWS FPGA runtime not installed")
 
-    assert any(host.file(join(join(*path), 'libfpga_mgmt.so')).exists
-               for path in product(('/usr/local/', '/usr/'), ('lib', 'lib64')))
+    assert any(
+        host.file(join(join(*path), "libfpga_mgmt.so")).exists
+        for path in product(("/usr/local/", "/usr/"), ("lib", "lib64"))
+    )
 
 
 def test_aws_fpga_sources_installed(host):
@@ -61,8 +64,8 @@ def test_aws_fpga_sources_installed(host):
     """
     _aws_only(host)
 
-    path = host.ansible.get_variables().get('aws_fpga_src_install')
+    path = host.ansible.get_variables().get("aws_fpga_src_install")
     if not path:
-        pytest.skip('AWS FPGA source not installed')
+        pytest.skip("AWS FPGA source not installed")
 
     assert host.file(path).exists
