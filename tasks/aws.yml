@@ -28,7 +28,6 @@
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
-  register: _aws_sig
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
