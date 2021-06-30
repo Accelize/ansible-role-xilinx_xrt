@@ -43,12 +43,15 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
+    - not aws_package_sig.changed
 
 - name: Verify XRT AWS package checksum
   command: sha512sum -c {{ xrt_package }}.digests
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
+  failed_when: _aws_sum.rc != 0 and "Failed to get nevra" not in _aws_sum.stdout
+  register: _aws_sum
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists

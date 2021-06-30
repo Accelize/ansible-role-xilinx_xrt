@@ -102,12 +102,15 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
+    - not xrt_package_sig.changed
 
 - name: Verify XRT package checksum
   command: sha512sum -c {{ xrt_package }}.digests
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
+  failed_when: _xrt_sum.rc != 0 and "Failed to get nevra" not in _xrt_sum.stdout
+  register: _xrt_sum
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
