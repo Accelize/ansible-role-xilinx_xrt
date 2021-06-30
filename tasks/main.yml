@@ -59,7 +59,7 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - xrt_package_sig.changed
+    - xrt_package_sig.state is defined
 
 - name: Download Xilinx master signing key
   get_url:
@@ -72,26 +72,25 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - xrt_package_sig.changed
+    - xrt_package_sig.state is defined
 
 - name: Ensure Xilinx master signing key is imported in GPG
   command: "gpg --import {{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - xrt_package_sig.changed
+    - xrt_package_sig.state is defined
 
 - name: Verify XRT package signature
   command: "gpg --verify {{ xrt_package }}.sig {{ xrt_package }}"
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
-  failed_when: _xrt_sig.rc != 0 and "could not be verified." not in _xrt_sig.stderr
   register: _xrt_sig
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - xrt_package_sig.changed
+    - xrt_package_sig.state is defined
 
 - name: Download XRT package checksum
   get_url:
@@ -102,19 +101,17 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - not xrt_package_sig.changed
+    - xrt_package_sig.state is not defined
 
 - name: Verify XRT package checksum
   command: sha512sum -c {{ xrt_package }}.digests
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
-  failed_when: _xrt_sum.rc != 0 and "Failed to get nevra" not in _xrt_sum.stdout
-  register: _xrt_sum
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - xrt_package_digests.changed
+    - xrt_package_digests.state is defined
 
 - name: Ensure EPEL repository is installed
   yum:

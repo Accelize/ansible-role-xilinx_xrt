@@ -21,18 +21,18 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
+    - xrt_package_sig.state is defined
 
 - name: Verify XRT AWS package signature
   command: "gpg --verify {{ aws_package }}.sig {{ aws_package }}"
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
-  failed_when: _aws_sig.rc != 0 and "could not be verified." not in _aws_sig.stderr
   register: _aws_sig
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - aws_package_sig.changed
+    - aws_package_sig.state is defined
 
 - name: Download XRT AWS package checksum
   get_url:
@@ -43,19 +43,18 @@
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - not aws_package_sig.changed
+    - aws_package_sig.state is not defined
+    - xrt_package_digests.state is defined
 
 - name: Verify XRT AWS package checksum
   command: sha512sum -c {{ xrt_package }}.digests
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
-  failed_when: _aws_sum.rc != 0 and "Failed to get nevra" not in _aws_sum.stdout
-  register: _aws_sum
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
-    - aws_package_digests.changed
+    - aws_package_digests.state is defined
 
 - name: Ensure AWS XRT DEB package is installed
   package:
