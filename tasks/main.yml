@@ -86,6 +86,8 @@
   args:
     chdir: "{{ xrt_tmp.path }}"
   changed_when: false
+  failed_when: _xrt_sig.rc != 0 and "could not be verified." not in _xrt_sig.stderr
+  register: _xrt_sig
   when:
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
