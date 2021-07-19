@@ -190,3 +190,10 @@
   when:
     - aws_fpga_install | bool
     - not libfpga_mgmt.stat.exists
+
+- name: Install AWS FPGA alternate driver
+  command: "make -C {{ aws_fpga_src }}/sdk/linux_kernel_drivers/{{ aws_fpga_driver }} install"
+  changed_when: false
+  when:
+    - aws_fpga_driver is defined
+    - aws_fpga_install | bool

@@ -46,6 +46,9 @@ AWS environment support extra variables associated to [AWS FPGA](https://github.
 * **aws_fpga_sdk_override_group**: If true, do not raise error if the group specified by *aws_fpga_sdk_group* already exists.
   Default to `false`.
   No effect if *aws_fpga_allow_non_root* is `false`.
+* **aws_fpga_driver**: If specified, install the specified alternate driver.
+  This may require *xilinx_xrt_install* set to `False`.
+  Supported values: `xdma`.
 
 ### Example Playbook
 
