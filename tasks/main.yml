@@ -229,13 +229,22 @@
     - ansible_os_family == 'Debian'
     - not xbutil.stat.exists
 
-- name: Ensure Kernel headers DEB are installed
-  apt:
-    name: "linux-headers-{{ ansible_kernel }}-generic"
-  retries: 10
-  delay: 1
-  register: _kernel_deb
-  until: _kernel_deb is successful
+- block:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
+  rescue:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}-generic"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
