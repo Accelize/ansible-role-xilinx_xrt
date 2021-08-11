@@ -1,0 +1,104 @@
+---
+
+- name: Get "/usr/local/lib64" directory information
+  stat:
+    path: /usr/local/lib64
+  register: usr_local_lib64
+
+- name: Get "libfpga_mgmt.so" file information
+  stat:
+    path: "/usr/local/{{ usr_local_lib64.stat.exists |
+           ternary('lib64','lib') }}/libfpga_mgmt.so"
+  register: libfpga_mgmt
+
+- name: Create AWS temporary directory
+  tempfile:
+    state: directory
+    prefix: aws_
+  register: aws_tmp
+  when:
+    - aws_fpga_src_install is not defined
+    - not libfpga_mgmt.stat.exists
+  notify: Clean up AWS temporary directory
+
+- name: Set AWS FPGA source directory
+  set_fact:
+    aws_fpga_src: "{{ aws_tmp.path }}"
+  when:
+    - aws_fpga_src_install is not defined
+    - not libfpga_mgmt.stat.exists
+
+- name: Set AWS FPGA source directory
+  set_fact:
+    aws_fpga_src: "{{ aws_fpga_src_install }}"
+  when: aws_fpga_src_install is defined
+
+- name: Ensure AWS FPGA source directory exists
+  file:
+    state: directory
+    path: "{{ aws_fpga_src }}"
+    mode: 0644
+  when: aws_fpga_src_install is defined
+
+- name: Download and extract AWS FPGA release tarbal
+  unarchive:
+    src: "https://api.github.com/repos/aws/aws-fpga/tarball/\
+          {{ aws_fpga_version | default('') }}"
+    dest: "{{ aws_fpga_src }}"
+    remote_src: true
+    extra_opts: ['--strip-components=1']
+  retries: 10
+  delay: 1
+  register: _aws_fpga_tar
+  until: _aws_fpga_tar is successful
+  when: aws_fpga_src_install is defined or not libfpga_mgmt.stat.exists
+
+- name: Ensure AWS FPGA build dependencies are present
+  apt:
+    name:
+      - gcc
+      - libc-dev
+      - make
+      - pciutils
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _aws_fpga_deb_deps
+  until: _aws_fpga_deb_deps is successful
+  when:
+    - ansible_os_family == 'Debian'
+    - not libfpga_mgmt.stat.exists
+
+- name: Ensure AWS FPGA build dependencies are present
+  yum:
+    name:
+      - gcc
+      - make
+      - pciutils
+    state: present
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _aws_fpga_rpm_deps
+  until: _aws_fpga_rpm_deps is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - not libfpga_mgmt.stat.exists
+
+- name: Build and install AWS FPGA libraries and utilities
+  shell: "source {{ aws_fpga_src }}/sdk_setup.sh;"
+  environment:
+    AWS_FPGA_ALLOW_NON_ROOT: "{{ aws_fpga_allow_non_root or '' }}"
+    AWS_FPGA_SDK_GROUP: "{{ aws_fpga_sdk_group }}"
+    AWS_FPGA_SDK_OVERRIDE_GROUP: "{{ aws_fpga_sdk_override_group or '' }}"
+  args:
+    creates: "/usr/local/{{ usr_local_lib64.stat.exists |
+              ternary('lib64','lib') }}/libfpga_mgmt.so"
+    executable: /bin/bash
+  when: not libfpga_mgmt.stat.exists
+
+- name: Install AWS FPGA alternate driver
+  command: "make -C {{ aws_fpga_src }}/sdk/linux_kernel_drivers/{{ aws_fpga_driver }} install"
+  changed_when: false
+  when: aws_fpga_driver is defined

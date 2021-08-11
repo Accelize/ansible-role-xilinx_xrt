@@ -1,0 +1,46 @@
+---
+
+- name: Set XRT environment specific package path
+  set_fact:
+    env_package_path: "{{ xrt_tmp.path }}/{{ env_package }}"
+
+- name: Download XRT environment specific package
+  get_url:
+    url: "{{ env_source }}"
+    dest: "{{ env_package_path }}"
+  retries: 10
+  delay: 1
+  register: _xrt_env
+  until: _xrt_env is successful
+
+- name: Download XRT environment specific package signature
+  get_url:
+    url: "{{ env_source }}.sig"
+    dest: "{{ env_package_path }}.sig"
+  failed_when: false  # May be not available
+  register: env_package_sig
+  when: xrt_package_sig.state is defined
+
+- name: Verify XRT environment specific package signature
+  command: "gpg --verify {{ env_package }}.sig {{ env_package }}"
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when: env_package_sig.state is defined
+
+- name: Download XRT environment specific package checksum
+  get_url:
+    url: "{{ env_source }}.digests"
+    dest: "{{ env_package_path }}.digests"
+  failed_when: false  # May be not available
+  register: env_package_digests
+  when:
+    - env_package_sig.state is not defined
+    - xrt_package_digests.state is defined
+
+- name: Verify XRT environment specific package checksum
+  command: sha512sum -c {{ xrt_package }}.digests
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when: env_package_digests.state is defined

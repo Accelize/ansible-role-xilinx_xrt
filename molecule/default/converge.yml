@@ -1,8 +1,8 @@
 ---
 - name: Converge
   hosts: all
+  strategy: free
   roles:
     - role: ansible-role-xilinx_xrt
   vars:
-    xilinx_xrt_ensure_compatible_kernel: false
-    reboot_on_kernel_update: false
+    xilinx_xrt_container: true

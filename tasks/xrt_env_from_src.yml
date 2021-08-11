@@ -1,0 +1,5 @@
+---
+
+- name: Set XRT environment specific package path
+  set_fact:
+    env_package_path: "{{ xrt_packages_list.files | xrt_find_package_path(xilinx_xrt_env) }}"

@@ -133,7 +133,15 @@ _MAX_KERNEL = {
             "2018.2": "3.10.0-957",
         }
     },
-    "Debian": {"bionic": {"2018.3": "4.18.0", "2018.2": "4.18.0"}},
+    "Debian": {
+        "bionic": {
+            "2018.3": "4.18.0",
+            "2018.2": "4.18.0",
+            "2019.1": "4.18.0",
+            "2019.2": "4.18.0",
+            "2020.1": "4.18.0",
+        }
+    },
 }
 
 
@@ -277,9 +285,57 @@ def xrt_kernel(version, ansible_facts):
     """
     family, dist = _os_release(ansible_facts)
     try:
-        return _MAX_KERNEL[family][dist][version]
+        return _MAX_KERNEL[family][dist][str(version)]
     except KeyError:
         return ""
+
+
+def xrt_find_package_path(packages, name):
+    """
+    Get package path from a list of package from "ansible.builtin.find".
+
+    Args:
+        packages (list of dict): XRT packages list.
+        name (str): Package name: 'xrt' or 'aws'.
+
+    Returns:
+        str: Package path.
+    """
+    filtered = tuple(
+        package["path"]
+        for package in packages
+        if package["path"].rsplit(".", 1)[0].endswith("-" + name)
+    )
+    try:
+        return filtered[0]
+    except IndexError:
+        raise ValueError(
+            'No package found for "%s" in %s'
+            % (name, ", ".join(package["path"] for package in packages))
+        )
+
+
+def xrt_find_devtoolset(ansible_facts):
+    """
+    Get the latest installed Red Hat Developer Toolset from installed package.
+
+    Args:
+        ansible_facts (dict): Ansible facts.
+
+    Returns:
+        str: Package path.
+    """
+    import re
+
+    devtoolset_match = re.compile(r"^devtoolset-\d+$").match
+    filtered = sorted(
+        (package for package in ansible_facts["packages"] if devtoolset_match(package)),
+        key=lambda k: int(k.rsplit("-", 1)[1]),
+    )
+    try:
+        return filtered[-1]
+    except IndexError:
+        raise ValueError('No "devtoolset-*" package installed')
 
 
 class FilterModule(object):
@@ -293,4 +349,6 @@ class FilterModule(object):
             "xrt_pkg_name": xrt_pkg_name,
             "xrt_pkg_src": xrt_pkg_src,
             "xrt_latest": xrt_latest,
+            "xrt_find_package_path": xrt_find_package_path,
+            "xrt_find_devtoolset": xrt_find_devtoolset,
         }

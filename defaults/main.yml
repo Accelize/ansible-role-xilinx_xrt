@@ -2,17 +2,26 @@
 # Install Xilinx XRT
 xilinx_xrt_install: true
 
+# Install Xilinx XRT from sources instead of packages
+xilinx_xrt_from_src: false
+
 # Add "source /opt/xilinx/xrt/setup.sh" to user "~/.bashrc"
 xilinx_xrt_bashrc: false
 
 # Xilinx XRT environement, default to Xilinx classical environement
-xilinx_xrt_env: ''
+_xilinx_xrt_env: "{{ xilinx_xrt_env | default('') }}"
 
 # Xilinx XRT version to install (Default to latest available
-xilinx_xrt_version: "{{ xilinx_xrt_env | xrt_latest(ansible_facts)}}"
+xilinx_xrt_version: "{{ _xilinx_xrt_env | xrt_latest(ansible_facts) }}"
 
 # Linux kernel version compatibles with XRT
 xilinx_xrt_ensure_compatible_kernel: true
+
+# Run inside a container
+xilinx_xrt_container: false
+
+# Red Hat Developer Toolset CentOS 7 fallback version
+xilinx_xrt_rhel7_devtoolset: 9
 
 # If true and xilinx_xrt_env is "aws", install AWS FPGA runtimes
 aws_fpga_install: true
@@ -26,11 +35,11 @@ aws_fpga_sdk_override_group: false
 # -------------------
 
 xrt_package: "{{ xilinx_xrt_version |
-              xrt_pkg_name('xrt', xilinx_xrt_env, ansible_facts)}}"
+              xrt_pkg_name('xrt', _xilinx_xrt_env, ansible_facts)}}"
 xrt_source: "{{ xilinx_xrt_version |
-             xrt_pkg_src('xrt', xilinx_xrt_env, ansible_facts)}}"
+             xrt_pkg_src('xrt', _xilinx_xrt_env, ansible_facts)}}"
 
-aws_package: "{{ xilinx_xrt_version |
-              xrt_pkg_name('aws', xilinx_xrt_env, ansible_facts)}}"
-aws_source: "{{ xilinx_xrt_version |
-             xrt_pkg_src('aws', xilinx_xrt_env, ansible_facts)}}"
+env_package: "{{ xilinx_xrt_version |
+              xrt_pkg_name(_xilinx_xrt_env, _xilinx_xrt_env, ansible_facts)}}"
+env_source: "{{ xilinx_xrt_version |
+             xrt_pkg_src(_xilinx_xrt_env, _xilinx_xrt_env, ansible_facts)}}"

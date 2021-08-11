@@ -22,6 +22,7 @@ pool:
 
 jobs:
   - job: tests
+    timeoutInMinutes: 120
     displayName: Tests
     variables:
       cacheDir: /tmp/.pipeline_cache
@@ -67,9 +68,13 @@ jobs:
         displayName: Test Ansible role
         condition: always()
         env:
-          ANSIBLE_STDOUT_CALLBACK: debug
+          ANSIBLE_DISPLAY_SKIPPED_HOSTS: "False"
           ANSIBLE_FORCE_COLOR: "True"
+          ANSIBLE_FORKS: "30"
           ANSIBLE_NOCOLOR": "False"
+          ANSIBLE_PIPELINING: "True"
+          ANSIBLE_SSH_ARGS: "-o ControlMaster=auto -o ControlPersist=60s"
+          ANSIBLE_STDOUT_CALLBACK: debug
 
   - job:
     displayName: Ansible Galaxy publish

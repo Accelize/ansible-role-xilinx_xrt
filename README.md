@@ -14,25 +14,32 @@ CentOS 7 is recommended on AWS since AWS only provides packages for it.
 
 ## Role Variables
 
-* **xilinx_xrt_install**: If `true` install XRT.
+* **xilinx_xrt_install**: If `true`, install XRT.
   Default to `true`.
 * **xilinx_xrt_version**: Xilinx XRT version to install.
   Default to the latest available.
+* **xilinx_xrt_from_src**:  If `true`, install XRT from sources instead of Xilinx provided packages.
+  Default to `false`.
 * **xilinx_xrt_env**: XRT specific environment.
-  Supported values: `aws`.
-  Default to the classical Xilinx XRT environment.
+  Supported values: `aws`, `azure`.
+  If not specified, default to the classical Xilinx XRT environment.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible.
   Default to `true`.
 * **xilinx_xrt_bashrc**: If `true`, add the source of the XRT setup script to the user `~/.bashrc`.
   Default to `false`.
+* **xilinx_xrt_container**: Set this to `true` if running the role inside a container to avoid kernel version mismatch issues.
+  Default to `false`.
+* **xilinx_xrt_rhel7_devtoolset**: Fallback Red Hat Developer Toolset version to use on RHEL/CentOS 7 if not installed by XRT provided dependencies install script.
+  No effect if *xilinx_xrt_from_src* is `false`.
+  Default to `9`.
 
 ### AWS FPGA
 
-The following is only available when **xilinx_xrt_env** is set to `aws`.
-
 AWS environment support extra variables associated to [AWS FPGA](https://github.com/aws/aws-fpga).
 
-* **aws_fpga_install**; If `true` install AWS FPGA runtime libraries. 
+The following is only available when **xilinx_xrt_env** is set to `aws`.
+
+* **aws_fpga_install**: If `true`, install AWS FPGA runtime libraries. 
   Default to `true`.
 * **aws_fpga_src_install**: If specified, install AWS FPGA sources in the specified directory.
   Default is to not install sources.
@@ -47,6 +54,7 @@ AWS environment support extra variables associated to [AWS FPGA](https://github.
   Default to `false`.
   No effect if *aws_fpga_allow_non_root* is `false`.
 * **aws_fpga_driver**: If specified, install the specified alternate driver.
+  If not specified use the default XOCL driver.
   This may require *xilinx_xrt_install* set to `False`.
   Supported values: `xdma`.
 

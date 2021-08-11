@@ -1,0 +1,98 @@
+---
+
+- name: Download and extract XRT release tarbal
+  unarchive:
+    src: "https://api.github.com/repos/Xilinx/XRT/tarball/\
+          {{ xilinx_xrt_version | default('') }}"
+    dest: "{{ xrt_tmp.path }}"
+    remote_src: true
+    extra_opts: ['--strip-components=1']
+  retries: 10
+  delay: 1
+  register: _xrt_tar
+  until: _xrt_tar is successful
+
+- name: Ensure tzdata is installed to avoid interactive prompt
+  apt:
+    name: tzdata
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _tzdata
+  until: _tzdata is successful
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure XRT build dependencies are installed
+  command: "{{ xrt_tmp.path }}/src/runtime_src/tools/scripts/xrtdeps.sh\
+            {{ xilinx_xrt_container | ternary(' -docker', '') }}"
+  changed_when: false
+  retries: 10
+  delay: 1
+  register: _xrt_deps
+  until: _xrt_deps is successful
+
+- name: Set XRT build command
+  set_fact:
+    xrt_build_command: ./build.sh
+  when: ansible_distribution_major_version != "7"
+
+- name: Gather installed packages list
+  package_facts:
+    manager: rpm
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == "7"
+
+- block:
+    - name: Set XRT build command using detected Red Hat Developer Toolset
+      set_fact:
+        xrt_build_command: "scl enable {{ ansible_facts | xrt_find_devtoolset() }} ./build.sh"
+  rescue:
+    - name: Ensure Software Collections repository is installed
+      yum:
+        name: centos-release-scl
+        state: present
+        install_weak_deps: false
+        disable_gpg_check: true
+      retries: 10
+      delay: 1
+      register: _scl
+      until: _scl is successful
+      when:
+        - ansible_distribution == "CentOS"
+
+    - name: Ensure Red Hat Developer Toolset {{ xilinx_xrt_rhel7_devtoolset }} is installed
+      yum:
+        name: "devtoolset-{{ xilinx_xrt_rhel7_devtoolset }}"
+        state: present
+        install_weak_deps: false
+        disable_gpg_check: true
+      retries: 10
+      delay: 1
+      register: _devtoolset
+      until: _devtoolset is successful
+
+    - name: Set XRT build command using Red Hat Developer Toolset {{ xilinx_xrt_rhel7_devtoolset }}
+      set_fact:
+        xrt_build_command: "scl enable devtoolset-{{ xilinx_xrt_rhel7_devtoolset }} ./build.sh"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == "7"
+
+- name: Ensure XRT is built
+  command: "{{ xrt_build_command }}"
+  args:
+    chdir: "{{ xrt_tmp.path }}/build"
+  changed_when: false
+
+- name: Find XRT packages
+  find:
+    paths: "{{ xrt_tmp.path }}/build/Release"
+    file_type: file
+    patterns: "*.{{ (ansible_os_family == 'RedHat') | ternary('rpm', 'deb') }}"
+  register: xrt_packages_list
+
+- name: Set XRT package path
+  set_fact:
+    xrt_package_path: "{{ xrt_packages_list.files | xrt_find_package_path('xrt') }}"

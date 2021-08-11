@@ -1,0 +1,171 @@
+---
+- name: Set XRT package path
+  set_fact:
+    xrt_package_path: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+
+- name: Download XRT package
+  get_url:
+    url: "{{ xrt_source }}"
+    dest: "{{ xrt_package_path }}"
+  retries: 10
+  delay: 1
+  register: _xrt
+  until: _xrt is successful
+  notify: Ensure Xilinx Management Proxy Daemon is started and enabled at boot
+
+- name: Download XRT package signature
+  get_url:
+    url: "{{ xrt_source }}.sig"
+    dest: "{{ xrt_package_path }}.sig"
+  failed_when: false  # May be not available
+  register: xrt_package_sig
+
+- name: Ensure GPG is installed
+  package:
+    name: gnupg
+    state: present
+  retries: 10
+  delay: 1
+  register: _gpg
+  until: _gpg is successful
+  when: xrt_package_sig.state is defined
+
+- name: Download Xilinx master signing key
+  get_url:
+    url: "https://www.xilinx.com/support/download/xilinx-master-signing-key.asc"
+    dest: "{{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
+  retries: 10
+  delay: 1
+  register: _xilinx_key
+  until: _xilinx_key is successful
+  when: xrt_package_sig.state is defined
+
+- name: Ensure Xilinx master signing key is imported in GPG
+  command: "gpg --import {{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
+  when: xrt_package_sig.state is defined
+
+- name: Verify XRT package signature
+  command: "gpg --verify {{ xrt_package }}.sig {{ xrt_package }}"
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when: xrt_package_sig.state is defined
+
+- name: Download XRT package checksum
+  get_url:
+    url: "{{ xrt_source }}.digests"
+    dest: "{{ xrt_package_path }}.digests"
+  failed_when: false  # May be not available
+  register: xrt_package_digests
+  when: xrt_package_sig.state is not defined
+
+- name: Verify XRT package checksum
+  command: sha512sum -c {{ xrt_package }}.digests
+  args:
+    chdir: "{{ xrt_tmp.path }}"
+  changed_when: false
+  when: xrt_package_digests.state is defined
+
+- name: Ensure EPEL repository is installed
+  yum:
+    name: "https://dl.fedoraproject.org/pub/epel/\
+           epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _epel
+  until: _epel is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version in ("7", "8")
+
+- name: Ensure RHEL optional RPMs repository is enabled
+  command:
+    cmd: subscription-manager repos --enable "rhel-7-server-optional-rpms"
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "Red Hat Enterprise Linux"
+    - ansible_distribution_major_version == "7"
+
+- name: Ensure CodeReady Linux Builder repository is enabled
+  command:
+    cmd: subscription-manager repos --enable "codeready-builder-for-rhel-8-x86_64-rpms"
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "Red Hat Enterprise Linux"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure DNF core plugins are installed
+  dnf:
+    state: present
+    name: python3-dnf-plugins-core
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _dnf_plugins
+  until: _dnf_plugins is successful
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure Powertools repository is enabled
+  command:
+    cmd: dnf config-manager --set-enabled powertools
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure AppStream repository is enabled
+  command:
+    cmd: dnf config-manager --set-enabled appstream
+  args:
+    warn: false
+  changed_when: false
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "8"
+
+- name: Ensure Kernel headers RPM are installed
+  yum:
+    name:
+      - "kernel-devel-{{ ansible_kernel }}"
+      - "kernel-headers-{{ ansible_kernel }}"
+    state: present
+    install_weak_deps: false
+    enablerepo: C7.*
+  retries: 10
+  delay: 1
+  register: _kernel_rpm
+  until: _kernel_rpm is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - not (xilinx_xrt_container | bool)
+
+- block:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
+  rescue:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}-generic"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
+  when:
+    - ansible_os_family == 'Debian'
+    - not (xilinx_xrt_container | bool)

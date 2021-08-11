@@ -8,6 +8,7 @@
   when:
     - xilinx_xrt_ensure_compatible_kernel | bool
     - xilinx_xrt_install | bool
+    - not (xilinx_xrt_container | bool)
 
 - name: Get "xbutil" file information
   stat:
@@ -25,185 +26,46 @@
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
 
-- name: Download XRT package
-  get_url:
-    url: "{{ xrt_source }}"
-    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+- name: Ensure APT cache is up to date
+  apt:
+    update_cache: true
+  changed_when: false
   retries: 10
   delay: 1
-  register: _xrt
-  until: _xrt is successful
-  notify: Ensure Xilinx Management Proxy Daemon is started and enabled at boot
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
+  register: _apt_cache
+  until: _apt_cache is successful
+  when: ansible_os_family == 'Debian'
 
-- name: Download XRT package signature
-  get_url:
-    url: "{{ xrt_source }}.sig"
-    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.sig"
-  failed_when: false  # May be not available
-  register: xrt_package_sig
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-
-- name: Ensure GPG is installed
-  package:
-    name: gnupg
+- name: Ensure pyopencl package is installed on Ubuntu 18.04 to avoid XRT install failure
+  apt:
+    name: python-pyopencl
     state: present
+    install_recommends: false
   retries: 10
   delay: 1
-  register: _gpg
-  until: _gpg is successful
+  register: _pyopencl
+  until: _pyopencl is successful
   when:
     - xilinx_xrt_install | bool
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_release == 'bionic'
     - not xbutil.stat.exists
-    - xrt_package_sig.state is defined
 
-- name: Download Xilinx master signing key
-  get_url:
-    url: "https://www.xilinx.com/support/download/xilinx-master-signing-key.asc"
-    dest: "{{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
-  retries: 10
-  delay: 1
-  register: _xilinx_key
-  until: _xilinx_key is successful
+- include_tasks: xrt_from_pkg.yml
   when:
     - xilinx_xrt_install | bool
+    - not (xilinx_xrt_from_src | bool)
     - not xbutil.stat.exists
-    - xrt_package_sig.state is defined
 
-- name: Ensure Xilinx master signing key is imported in GPG
-  command: "gpg --import {{ xrt_tmp.path }}/xilinx-master-signing-key.asc"
+- include_tasks: xrt_from_src.yml
   when:
     - xilinx_xrt_install | bool
+    - xilinx_xrt_from_src | bool
     - not xbutil.stat.exists
-    - xrt_package_sig.state is defined
-
-- name: Verify XRT package signature
-  command: "gpg --verify {{ xrt_package }}.sig {{ xrt_package }}"
-  args:
-    chdir: "{{ xrt_tmp.path }}"
-  changed_when: false
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-    - xrt_package_sig.state is defined
-
-- name: Download XRT package checksum
-  get_url:
-    url: "{{ xrt_source }}.digests"
-    dest: "{{ xrt_tmp.path }}/{{ xrt_package }}.digests"
-  failed_when: false  # May be not available
-  register: xrt_package_digests
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-    - xrt_package_sig.state is not defined
-
-- name: Verify XRT package checksum
-  command: sha512sum -c {{ xrt_package }}.digests
-  args:
-    chdir: "{{ xrt_tmp.path }}"
-  changed_when: false
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-    - xrt_package_digests.state is defined
-
-- name: Ensure EPEL repository is installed
-  yum:
-    name: "https://dl.fedoraproject.org/pub/epel/\
-           epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
-    state: present
-    install_weak_deps: false
-    disable_gpg_check: true
-  retries: 10
-  delay: 1
-  register: _epel
-  until: _epel is successful
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version in ("7", "8")
-
-- name: Ensure RHEL optional RPMs repository is enabled
-  command:
-    cmd: subscription-manager repos --enable "rhel-7-server-optional-rpms"
-  args:
-    warn: false
-  changed_when: false
-  when:
-    - ansible_distribution == "Red Hat Enterprise Linux"
-    - ansible_distribution_major_version == "7"
-
-- name: Ensure CodeReady Linux Builder repository is enabled
-  command:
-    cmd: subscription-manager repos --enable "codeready-builder-for-rhel-8-x86_64-rpms"
-  args:
-    warn: false
-  changed_when: false
-  when:
-    - ansible_distribution == "Red Hat Enterprise Linux"
-    - ansible_distribution_major_version == "8"
-
-- name: Ensure DNF core plugins are installed
-  dnf:
-    state: present
-    name: python3-dnf-plugins-core
-    install_weak_deps: false
-  retries: 10
-  delay: 1
-  register: _dnf_plugins
-  until: _dnf_plugins is successful
-  when:
-    - ansible_distribution == "CentOS"
-    - ansible_distribution_major_version == "8"
-
-- name: Ensure Powertools repository is enabled
-  command:
-    cmd: dnf config-manager --set-enabled powertools
-  args:
-    warn: false
-  changed_when: false
-  when:
-    - ansible_distribution == "CentOS"
-    - ansible_distribution_major_version == "8"
-
-- name: Ensure AppStream repository is enabled
-  command:
-    cmd: dnf config-manager --set-enabled appstream
-  args:
-    warn: false
-  changed_when: false
-  when:
-    - ansible_distribution == "CentOS"
-    - ansible_distribution_major_version == "8"
-
-- name: Ensure Kernel headers RPM are installed
-  yum:
-    name:
-      - "kernel-devel-{{ ansible_kernel }}"
-      - "kernel-headers-{{ ansible_kernel }}"
-    state: present
-    install_weak_deps: false
-    enablerepo: C7.*
-  retries: 10
-  delay: 1
-  register: _kernel_rpm
-  until: _kernel_rpm is successful
-  when:
-    - xilinx_xrt_install | bool
-    - not xbutil.stat.exists
-    - ansible_os_family == 'RedHat'
-  tags:
-    - molecule-notest  # Bad detected kernel version from container
 
 - name: Ensure XRT RPM package is installed
   yum:
-    name: "{{ xrt_tmp.path }}/{{ xrt_package }}"
+    name: "{{ xrt_package_path }}"
     state: present
     install_weak_deps: false
     disable_gpg_check: true
@@ -216,54 +78,48 @@
     - ansible_os_family == 'RedHat'
     - not xbutil.stat.exists
 
-- name: Ensure APT cache is up to date
+- name: Ensure XRT DEB package is installed
   apt:
-    update_cache: true
-  changed_when: false
+    deb: "{{ xrt_package_path }}"
+    state: present
+    install_recommends: false
   retries: 10
   delay: 1
-  register: _apt_cache
-  until: _apt_cache is successful
+  register: xrt_deb
+  until: xrt_deb is successful
   when:
     - xilinx_xrt_install | bool
     - ansible_os_family == 'Debian'
     - not xbutil.stat.exists
 
 - block:
-    - name: Ensure Kernel headers DEB are installed
-      apt:
-        name: "linux-headers-{{ ansible_kernel }}"
-      retries: 10
-      delay: 1
-      register: _kernel_deb
-      until: _kernel_deb is successful
-  rescue:
-    - name: Ensure Kernel headers DEB are installed
-      apt:
-        name: "linux-headers-{{ ansible_kernel }}-generic"
-      retries: 10
-      delay: 1
-      register: _kernel_deb
-      until: _kernel_deb is successful
-  when:
-    - xilinx_xrt_install | bool
-    - ansible_os_family == 'Debian'
-    - not xbutil.stat.exists
-  tags:
-    - molecule-notest  # Bad detected kernel version from container
+    - name: Verify that XOCL kernel module is properly installed
+      command: lsmod
+      register: _lsmod
+      failed_when: not "xocl" in _lsmod.stdout
+      changed_when: false
 
-- name: Ensure XRT DEB package is installed
-  package:
-    deb: "{{ xrt_tmp.path }}/{{ xrt_package }}"
-    state: present
-    install_recommends: false
-  retries: 10
-  delay: 1
-  register: _xrt_deb
-  until: _xrt_deb is successful
+  rescue:
+    - name: Show XRT DEB install log
+      debug:
+        msg: "{{ xrt_deb.stdout }}"
+
+    - name: Get DKMS make log
+      shell: cat /var/lib/dkms/xrt/*/build/make.log
+      register: dkms_log
+      changed_when: false
+
+    - name: Show DKMS make log
+      debug:
+        msg: "{{ dkms_log.stdout }}"
+
+    - name: Fail on XOCL kernel module installation failure
+      fail:
+        msg: The XOCL driver is not properly installed.
+
   when:
+    - not (xilinx_xrt_container | bool)
     - xilinx_xrt_install | bool
-    - ansible_os_family == 'Debian'
     - not xbutil.stat.exists
 
 - name: Ensure XRT is sourced in ~/.bashrc
@@ -275,5 +131,52 @@
     - xilinx_xrt_install | bool
     - xilinx_xrt_bashrc | bool
 
-- include_tasks: aws.yml
-  when: xilinx_xrt_env == 'aws'
+- include_tasks: xrt_env_from_pkg.yml
+  when:
+    - xilinx_xrt_env is defined
+    - xilinx_xrt_install | bool
+    - not (xilinx_xrt_from_src | bool)
+    - not xbutil.stat.exists
+
+- include_tasks: xrt_env_from_src.yml
+  when:
+    - xilinx_xrt_env is defined
+    - xilinx_xrt_install | bool
+    - xilinx_xrt_from_src | bool
+    - not xbutil.stat.exists
+
+- name: Ensure environment specific XRT package is installed
+  package:
+    deb: "{{ env_package_path }}"
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _xrt_env_deb
+  until: _xrt_env_deb is successful
+  when:
+    - xilinx_xrt_env is defined
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - ansible_os_family == 'Debian'
+
+- name: Ensure environment specific XRT package is installed
+  yum:
+    name: "{{ env_package_path }}"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _xrt_env_rpm
+  until: _xrt_env_rpm is successful
+  when:
+    - xilinx_xrt_env is defined
+    - xilinx_xrt_install | bool
+    - not xbutil.stat.exists
+    - ansible_os_family == 'RedHat'
+
+- include_tasks: aws_fpga_from_src.yml
+  when:
+    - _xilinx_xrt_env == "aws"
+    - aws_fpga_install | bool

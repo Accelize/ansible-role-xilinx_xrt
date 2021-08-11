@@ -27,6 +27,12 @@ platforms:
     groups:
       - xrt_2019_2
 
+  - name: ubuntu_bionic-2019.2-src
+    image: ubuntu:bionic
+    groups:
+      - xrt_2019_2
+      - xrt_src
+
   - name: ubuntu_bionic-2019.1
     image: ubuntu:bionic
     groups:
@@ -79,6 +85,12 @@ platforms:
     image: centos:8
     groups:
       - xrt_2021_1
+
+  - name: centos_7-2021.1-src
+    image: centos:7
+    groups:
+      - xrt_2021_1
+      - xrt_src
 
   - name: centos_7-2020.1
     image: centos:7
@@ -136,6 +148,8 @@ provisioner:
         xilinx_xrt_version: 2018.3
       xrt_2018_2:
         xilinx_xrt_version: 2018.2
+      xrt_src:
+        xilinx_xrt_from_src: true
       no_xrt:
         xilinx_xrt_install: false
       aws:
@@ -146,3 +160,11 @@ provisioner:
 
 verifier:
   name: testinfra
+
+scenario:
+  test_sequence:
+    - dependency
+    - create
+    - converge
+    - idempotence
+    - verify
