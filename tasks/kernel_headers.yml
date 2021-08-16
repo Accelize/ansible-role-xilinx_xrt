@@ -1,0 +1,37 @@
+---
+
+- name: Ensure Kernel headers RPM are installed
+  package:
+    name:
+      - "kernel-devel-{{ ansible_kernel }}"
+      - "kernel-headers-{{ ansible_kernel }}"
+    state: present
+    install_weak_deps: false
+    enablerepo: C7.*
+  retries: 10
+  delay: 1
+  register: _kernel_rpm
+  until: _kernel_rpm is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - not (xilinx_xrt_container | bool)
+
+- block:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
+  rescue:
+    - name: Ensure Kernel headers DEB are installed
+      apt:
+        name: "linux-headers-{{ ansible_kernel }}-generic"
+      retries: 10
+      delay: 1
+      register: _kernel_deb
+      until: _kernel_deb is successful
+  when:
+    - ansible_os_family == 'Debian'
+    - not (xilinx_xrt_container | bool)
