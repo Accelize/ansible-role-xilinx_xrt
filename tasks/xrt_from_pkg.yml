@@ -66,8 +66,23 @@
   changed_when: false
   when: xrt_package_digests.state is defined
 
+- name: Ensure Amazon Linux EPEL extra is enabled
+  command: "amazon-linux-extras enable epel"
+  changed_when: false
+  when: ansible_distribution == 'Amazon'
+
 - name: Ensure EPEL repository is installed
-  yum:
+  package:
+    name: epel-release
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _epel
+  until: _epel is successful
+  when: ansible_distribution in ("CentOS", "Amazon")
+
+- name: Ensure EPEL repository is installed
+  package:
     name: "https://dl.fedoraproject.org/pub/epel/\
            epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
@@ -75,11 +90,9 @@
     disable_gpg_check: true
   retries: 10
   delay: 1
-  register: _epel
-  until: _epel is successful
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version in ("7", "8")
+  register: _epel_rhel
+  until: _epel_rhel is successful
+  when: ansible_distribution == "Red Hat Enterprise Linux"
 
 - name: Ensure RHEL optional RPMs repository is enabled
   command:

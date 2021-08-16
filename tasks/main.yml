@@ -65,7 +65,7 @@
     - not xbutil.stat.exists
 
 - name: Ensure XRT RPM package is installed
-  yum:
+  package:
     name: "{{ xrt_package_path }}"
     state: present
     install_weak_deps: false
@@ -162,7 +162,7 @@
     - ansible_os_family == 'Debian'
 
 - name: Ensure environment specific XRT package is installed
-  yum:
+  package:
     name: "{{ env_package_path }}"
     state: present
     install_weak_deps: false
