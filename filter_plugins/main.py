@@ -255,19 +255,23 @@ def xrt_latest(env, ansible_facts):
     """
     family, dist = _os_release(ansible_facts)
 
+    versions = set(_PACKAGES)
     if env == "aws":
-        from collections import ChainMap
+        versions.update(_AWS_PACKAGES)
 
-        all_packages = ChainMap(_PACKAGES, _AWS_PACKAGES)
-    else:
-        all_packages = _PACKAGES
-
-    for version in sorted(all_packages, reverse=True):
+    for version in sorted(versions, reverse=True):
+        if env == "aws":
+            try:
+                _ = _AWS_PACKAGES[version][family][dist]
+                return version
+            except KeyError:
+                pass
         try:
-            _ = all_packages[version][family][dist]
+            _ = _PACKAGES[version][family][dist]
             return version
         except KeyError:
             continue
+
     raise ValueError("No XRT version found for this OS")
 
 
