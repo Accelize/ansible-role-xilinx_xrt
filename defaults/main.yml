@@ -43,3 +43,5 @@ env_package: "{{ xilinx_xrt_version |
               xrt_pkg_name(_xilinx_xrt_env, _xilinx_xrt_env, ansible_facts)}}"
 env_source: "{{ xilinx_xrt_version |
              xrt_pkg_src(_xilinx_xrt_env, _xilinx_xrt_env, ansible_facts)}}"
+
+xrt_required_kernel: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"

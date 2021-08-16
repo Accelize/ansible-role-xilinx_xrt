@@ -4,9 +4,10 @@
   include_role:
     name: accelize.linux_kernel
   vars:
-    kernel_version: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"
+    kernel_version: "{{ xrt_required_kernel }}"
   when:
     - xilinx_xrt_ensure_compatible_kernel | bool
+    - xrt_required_kernel != ""  # noqa empty-string-compare
     - xilinx_xrt_install | bool
     - not (xilinx_xrt_container | bool)
 
