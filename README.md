@@ -10,8 +10,6 @@ A compatible Xilinx FPGA device is required on the target host.
 
 The role requires to be run as root on the target host.
 
-CentOS 7 is recommended on AWS since AWS only provides packages for it.
-
 ## Role Variables
 
 * **xilinx_xrt_install**: If `true`, install XRT.
@@ -26,6 +24,8 @@ CentOS 7 is recommended on AWS since AWS only provides packages for it.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible.
   Default to `true`.
 * **xilinx_xrt_bashrc**: If `true`, add the source of the XRT setup script to the user `~/.bashrc`.
+  Default to `false`.
+* **xilinx_xrt_check_fpga**: If `true`, check if XRT is properly installed by trying to detect FPGA.
   Default to `false`.
 * **xilinx_xrt_container**: Set this to `true` if running the role inside a container to avoid kernel version mismatch issues.
   Default to `false`.

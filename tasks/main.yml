@@ -97,7 +97,7 @@
     - name: Verify that XOCL kernel module is properly installed
       command: lsmod
       register: _lsmod
-      failed_when: not "xocl" in _lsmod.stdout
+      failed_when: "not 'xocl' in _lsmod.stdout"
       changed_when: false
 
   rescue:
@@ -176,6 +176,26 @@
     - xilinx_xrt_install | bool
     - not xbutil.stat.exists
     - ansible_os_family == 'RedHat'
+
+- block:
+    - name: Verify that FPGA are properly detected by xbutil
+      command: /opt/xilinx/xrt/bin/xbutil scan
+      register: xbutil_scan
+      failed_when: "' 0 are usable' in xbutil_scan.stdout"
+      changed_when: false
+
+  rescue:
+    - name: Show xbutil scan output
+      debug:
+        msg: "{{ xbutil_scan.stdout }}"
+
+    - name: Fail on xbutil scan not detecting FPGA
+      fail:
+        msg: xbutil does not found FPGA.
+
+  when:
+    - xilinx_xrt_check_fpga | bool
+    - not (xilinx_xrt_container | bool)
 
 - include_tasks: aws_fpga_from_src.yml
   when:
