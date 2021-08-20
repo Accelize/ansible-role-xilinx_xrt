@@ -69,6 +69,10 @@
 - name: Ensure Amazon Linux EPEL extra is enabled
   command: "amazon-linux-extras enable epel"
   changed_when: false
+  retries: 10
+  delay: 1
+  register: _epel
+  until: _epel is successful
   when: ansible_distribution == 'Amazon'
 
 - name: Ensure EPEL repository is installed
