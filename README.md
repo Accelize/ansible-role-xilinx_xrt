@@ -45,14 +45,17 @@ The following is only available when **xilinx_xrt_env** is set to `aws`.
   Default is to not install sources.
 * **aws_fpga_version**: AWS FPGA version to install.
   Default to the latest available.
-* **aws_fpga_allow_non_root**: If `true`, allow FPGA devices access to users in the group specified by *aws_fpga_sdk_group*.
+* **aws_fpga_allow_non_root**: If `true`, allow FPGA devices access to all users or users of a specific group. See *aws_fpga_sdk_others*.
   Default to `false`.
+* **aws_fpga_sdk_others**: If `true`, allow FPGA devices access to all users else, allow access to users in the group specified by *aws_fpga_sdk_group*.
+  Default to `false`.
+  No effect if *aws_fpga_allow_non_root* is `false`.
 * **aws_fpga_sdk_group**: Name of the group of users that can access to FPGA devices.
   Default to `fpgauser`.
-  No effect if *aws_fpga_allow_non_root* is `false`.
+  No effect if *aws_fpga_allow_non_root* is `false` or aws_fpga_sdk_others is `true`.
 * **aws_fpga_sdk_override_group**: If true, do not raise error if the group specified by *aws_fpga_sdk_group* already exists.
   Default to `false`.
-  No effect if *aws_fpga_allow_non_root* is `false`.
+  No effect if *aws_fpga_allow_non_root* is `false` or aws_fpga_sdk_others is `true`.
 * **aws_fpga_driver**: If specified, install the specified alternate driver.
   If not specified use the default XOCL driver.
   This may require *xilinx_xrt_install* set to `False`.

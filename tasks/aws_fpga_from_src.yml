@@ -92,6 +92,7 @@
     AWS_FPGA_ALLOW_NON_ROOT: "{{ aws_fpga_allow_non_root or '' }}"
     AWS_FPGA_SDK_GROUP: "{{ aws_fpga_sdk_group }}"
     AWS_FPGA_SDK_OVERRIDE_GROUP: "{{ aws_fpga_sdk_override_group or '' }}"
+    AWS_FPGA_SDK_OTHERS: "{{ aws_fpga_sdk_others or '' }}"
   args:
     creates: "/usr/local/{{ usr_local_lib64.stat.exists |
               ternary('lib64','lib') }}/libfpga_mgmt.so"

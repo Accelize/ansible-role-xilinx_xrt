@@ -31,6 +31,7 @@ aws_fpga_install: true
 
 # AWS: Allow access to FPGA for users in "aws_fpga_sdk_group" group
 aws_fpga_allow_non_root: false
+aws_fpga_sdk_others: false
 aws_fpga_sdk_group: fpgauser
 aws_fpga_sdk_override_group: false
 
