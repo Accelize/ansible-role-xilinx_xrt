@@ -49,3 +49,6 @@ env_source: "{{ xilinx_xrt_version |
              xrt_pkg_src(_xilinx_xrt_env, _xilinx_xrt_env, ansible_facts)}}"
 
 xrt_required_kernel: "{{ xilinx_xrt_version | xrt_kernel(ansible_facts) }}"
+
+xrt_name: "{{ (xilinx_xrt_version in ['2018.2', '2018.3', '2019.1']) | ternary('sdaccel', 'vitis') }}"
+aws_fpga_xrt_setup: "{{ xrt_name }}_runtime"

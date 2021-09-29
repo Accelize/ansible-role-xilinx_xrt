@@ -87,12 +87,13 @@
     - not libfpga_mgmt.stat.exists
 
 - name: Build and install AWS FPGA libraries and utilities
-  shell: "source {{ aws_fpga_src }}/sdk_setup.sh;"
+  shell: "source {{ aws_fpga_src }}/{{ (xilinx_xrt_install | bool) | ternary(aws_fpga_xrt_setup, 'sdk') }}_setup.sh;"
   environment:
     AWS_FPGA_ALLOW_NON_ROOT: "{{ aws_fpga_allow_non_root or '' }}"
     AWS_FPGA_SDK_GROUP: "{{ aws_fpga_sdk_group }}"
     AWS_FPGA_SDK_OVERRIDE_GROUP: "{{ aws_fpga_sdk_override_group or '' }}"
     AWS_FPGA_SDK_OTHERS: "{{ aws_fpga_sdk_others or '' }}"
+    VIVADO_TOOL_VERSION: "{{ xilinx_xrt_version }}"
   args:
     creates: "/usr/local/{{ usr_local_lib64.stat.exists |
               ternary('lib64','lib') }}/libfpga_mgmt.so"

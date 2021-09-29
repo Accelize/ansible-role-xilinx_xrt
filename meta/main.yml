@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: xilinx_xrt
-  namespace: Accelize
+  namespace: accelize
   author: Accelize
   description: 'This Ansible role install the Xilinx XRT.'
   company: Accelize
