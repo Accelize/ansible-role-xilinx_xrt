@@ -197,6 +197,11 @@
     - xilinx_xrt_check_fpga | bool
     - not (xilinx_xrt_container | bool)
 
+- include_tasks: deployment_target_platform.yml
+  when:
+    - xilinx_xrt_platforms is defined
+    - xilinx_xrt_install | bool
+
 - include_tasks: aws_fpga_from_src.yml
   when:
     - _xilinx_xrt_env == "aws"

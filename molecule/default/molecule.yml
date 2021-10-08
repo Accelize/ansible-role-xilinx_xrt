@@ -43,14 +43,6 @@ platforms:
     groups:
       - xrt_2018_3
 
-  - name: ubuntu_bionic-2018.3-aws
-    image: ubuntu:bionic
-    groups:
-      # Warning:
-      # The "aws" package is not provided for all XRT versions by Xilinx
-      - xrt_2018_3
-      - aws
-
   - name: ubuntu_bionic-2018.2
     image: ubuntu:bionic
     groups:
@@ -136,16 +128,22 @@ provisioner:
     group_vars:
       xrt_2021_1:
         xilinx_xrt_version: 2021.1
+        xilinx_xrt_platforms: [u200, u250, u280]
       xrt_2020_2:
         xilinx_xrt_version: 2020.2
+        xilinx_xrt_platforms: [u200]
       xrt_2020_1:
         xilinx_xrt_version: 2020.1
+        xilinx_xrt_platforms: [u200]
       xrt_2019_2:
         xilinx_xrt_version: 2019.2
+        xilinx_xrt_platforms: [u200]
       xrt_2019_1:
         xilinx_xrt_version: 2019.1
+        xilinx_xrt_platforms: [u200]
       xrt_2018_3:
         xilinx_xrt_version: 2018.3
+        xilinx_xrt_platforms: [u200]
       xrt_2018_2:
         xilinx_xrt_version: 2018.2
       xrt_src:
@@ -166,5 +164,4 @@ scenario:
     - dependency
     - create
     - converge
-    - idempotence
     - verify

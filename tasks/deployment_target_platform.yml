@@ -1,0 +1,95 @@
+---
+
+# Get and verify packages
+- name: Set deployment target plaform package URLs
+  set_fact:
+    plt_package_src: "{{ xilinx_xrt_version | xrt_platform_pkg_src(xilinx_xrt_platforms, ansible_facts) }}"
+
+- name: Create temporary directory
+  tempfile:
+    state: directory
+    prefix: xrt_
+  register: plt_tmp
+  notify: Clean up platform temporary directory
+
+- name: Download deployment target plaform packages
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ plt_tmp.path }}/{{ item.name }}"
+  retries: 10
+  delay: 1
+  register: _plt
+  until: _plt is successful
+  with_items: "{{ plt_package_src }}"
+
+- name: Download deployment target plaform package signatures
+  get_url:
+    url: "{{ item.url }}.sig"
+    dest: "{{ plt_tmp.path }}/{{ item.name }}.sig"
+  failed_when: false  # May be not available
+  register: plt_package_sig
+  with_items: "{{ plt_package_src }}"
+
+- name: Verify deployment target plaform package signatures
+  command: "gpg --verify {{ item.name }}.sig {{ item.name }}"
+  args:
+    chdir: "{{ plt_tmp.path }}"
+  changed_when: false
+  with_items: "{{ plt_package_src }}"
+  when: plt_package_sig.state is defined
+
+- name: Download deployment target plaform package checksums
+  get_url:
+    url: "{{ item.url }}.digests"
+    dest: "{{ plt_tmp.path }}/{{ item.name }}.digests"
+  failed_when: false  # May be not available
+  register: plt_package_digests
+  with_items: "{{ plt_package_src }}"
+  when: plt_package_sig.state is not defined
+
+- name: Verify deployment target plaform package checksums
+  command: sha512sum -c {{ item.name }}.digests
+  args:
+    chdir: "{{ plt_tmp.path }}"
+  changed_when: false
+  with_items: "{{ plt_package_src }}"
+  when: plt_package_digests.state is defined
+
+- name: Extract deployment target plaform packages tarballs
+  unarchive:
+    src: "{{ plt_tmp.path }}/{{ item }}"
+    dest: "{{ plt_tmp.path }}"
+    remote_src: true
+    list_files: true
+  register: plt_tar
+  with_items: "{{ plt_package_src | xrt_platform_pkg_archives() }}"
+
+# Install
+
+- name: List deployment target plaform packages to install
+  set_fact:
+    plt_packages: "{{ plt_package_src | xrt_platform_pkg_files(plt_tar, ansible_facts, plt_tmp.path) }}"
+
+- name: Ensure deployment target plaform RPM packages are installed
+  package:
+    name: "{{ plt_packages }}"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _plt_rpm
+  until: _plt_rpm is successful
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure deployment target plaform DEB packages are installed
+  apt:
+    deb: "{{ item }}"
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _plt_deb
+  until: _plt_deb is successful
+  with_items: "{{ plt_packages }}"
+  when: ansible_os_family == 'Debian'

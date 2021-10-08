@@ -144,6 +144,107 @@ _MAX_KERNEL = {
     },
 }
 
+# Deployment Target Platform packages (Same base URL as _PACKAGES)
+_PLATFORM_PACKAGES = {
+    "u50": {
+        "2021.1": {
+            "Debian": "xilinx-u50-gen3x16-xdma-all_1-2784799.deb.tar.gz",
+            "RedHat": "xilinx-u50-gen3x16-xdma-noarch_1-2784799.rpm.tar.gz",
+        },
+        "2020.2": {
+            "Debian": "xilinx-u50-gen3x16-xdma-201920_3-3_all.deb.tar.gz",
+            "RedHat": "xilinx-u50-gen3x16-xdma-201920_3-1.noarch.rpm.tar.gz",
+        },
+        "2020.1": {
+            "Debian": {
+                "xenial": "Xilinx_u50-gen3x16-xdma-201920.3-2784799_16.04_deb.tar.gz",
+                "bionic": "Xilinx_u50-gen3x16-xdma-201920.3-2784799_18.04_deb.tar.gz",
+            },
+            "RedHat": "Xilinx_u50-gen3x16-xdma-201920.3-2784799_noarch_rpm.tar.gz",
+        },
+        "2019.2": {
+            "Debian": {
+                "xenial": "xilinx-u50-xdma-201920.1-2699728_16.04.deb",
+                "bionic": "xilinx-u50-xdma-201920.1-2699728_18.04.deb",
+            },
+            "RedHat": "xilinx-u50-xdma-201920.1-2699728.x86_64.rpm",
+        },
+        "2019.1": {
+            "Debian": {
+                "xenial": "xilinx-u50-xdma-201910.1-0911_16.04.deb",
+                "bionic": "xilinx-u50-xdma-201910.1-0911_18.04.deb",
+            },
+            "RedHat": "xilinx-u50-xdma-201910.1-0911.x86_64.rpm",
+        },
+    },
+    "u200": {
+        "2021.1": {
+            "Debian": "xilinx-u200-gen3x16-xdma-all_1-3209015.deb_2.tar.gz",
+            "RedHat": "xilinx-u200-gen3x16-xdma-noarch_1-3209015.rpm_2.tar.gz",
+        },
+        "2018.3": {  # 2018.3 to 2020.2
+            "Debian": {
+                "xenial": "xilinx-u200-xdma-201830.2-2580015_16.04.deb",
+                "bionic": "xilinx-u200-xdma-201830.2-2580015_18.04.deb",
+            },
+            "RedHat": "xilinx-u200-xdma-201830.2-2580015.x86_64.rpm",
+        },
+    },
+    "u250": {
+        "2021.1": {
+            "Debian": "xilinx-u250-gen3x16-xdma-all_3.1-3063142.deb_2.tar.gz",
+            "RedHat": "xilinx-u250-gen3x16-xdma-noarch_3.1-3063142.rpm_2.tar.gz",
+        },
+        "2020.2": {
+            "Debian": "xilinx-u250-gen3x16-xdma-platform_3.1-1_all.deb.tar.gz",
+            "RedHat": "xilinx-u250-gen3x16-xdma-platform-3.1-1.noarch.rpm.tar.gz",
+        },
+        "2018.3": {  # 2018.3 to 2020.1
+            "Debian": {
+                "xenial": "xilinx-u250-xdma-201830.2-2580015_16.04.deb",
+                "bionic": "xilinx-u250-xdma-201830.2-2580015_18.04.deb",
+            },
+            "RedHat": "xilinx-u250-xdma-201830.2-2580015.x86_64.rpm",
+        },
+    },
+    "u280": {
+        "2021.1": {
+            "Debian": {
+                "xenial": "xilinx-u280-xdma-201920.3-3246211_16.04.deb",
+                "bionic": "xilinx-u280-xdma-201920.3-3246211_18.04.deb",
+                "focal": "xilinx-u280-xdma-201920.3-3246211_18.04.deb",
+            },
+            "RedHat": "xilinx-u280-xdma-201920.3-3246211.x86_64.rpm",
+        },
+        "2020.1": {  # 2020.1 and 2020.2
+            "Debian": {
+                "xenial": "xilinx-u280-xdma-201920.3-2789161_16.04.deb",
+                "bionic": "xilinx-u280-xdma-201920.3-2789161_18.04.deb",
+            },
+            "RedHat": "xilinx-u280-xdma-201920.3-2789161.x86_64.rpm",
+        },
+        "2019.2": {
+            "Debian": {
+                "xenial": "xilinx-u280-xdma-201920.1-2699728_16.04.deb",
+                "bionic": "xilinx-u280-xdma-201920.1-2699728_18.04.deb",
+            },
+            "RedHat": "xilinx-u280-xdma-201920.1-2699728.x86_64.rpm",
+        },
+        "2019.1": {
+            "Debian": {
+                "xenial": "xilinx-u280-xdma-201910.1-2579327_16.04.deb",
+                "bionic": "xilinx-u280-xdma-201910.1-2579327_18.04.deb",
+            },
+            "RedHat": "xilinx-u280-xdma-201910.1-2579327.x86_64.rpm",
+        },
+    },
+}
+
+_PKG_EXTENSION = {
+    "Debian": ".deb",
+    "RedHat": ".rpm",
+}
+
 
 def _os_release(ansible_facts):
     """
@@ -240,6 +341,99 @@ def xrt_pkg_src(version, name, env, ansible_facts):
         str: Package source url.
     """
     return _pkg_info(version, name, env, ansible_facts)[1]
+
+
+def xrt_platform_pkg_src(version, platforms, ansible_facts):
+    """
+    Get the list packages source URL for each platform.
+
+    Args:
+        version (str): XRT version.
+        platforms (list of str): Platform.
+        ansible_facts (dict): Ansible facts.
+
+    Returns:
+        list of dict of str: Packages source url and filenames.
+    """
+    version = str(version)  # May be interpreted as float in template
+    family, dist = _os_release(ansible_facts)
+    result = set()
+    for platform in platforms:
+        # Platform
+        try:
+            packages = _PLATFORM_PACKAGES[platform]
+        except KeyError:
+            raise ValueError("Unsupported platform: %s" % platform)
+
+        # XRT version
+        try:
+            packages = packages[version]
+        except KeyError:
+            # Get most recent previous version
+            try:
+                packages = packages[tuple(ver for ver in packages if ver < version)[0]]
+            except IndexError:
+                raise ValueError(
+                    "Platform %s not supported on this XRT version" % platform
+                )
+
+        # OS
+        packages = packages[family]
+        if isinstance(packages, str):
+            result.add(packages)
+            continue
+        try:
+            result.add(packages[dist])
+        except KeyError:
+            raise ValueError("Platform %s not supported on this OS" % platform)
+    return [dict(name=name, url=_BASE_URL + name) for name in result]
+
+
+def xrt_platform_pkg_archives(plt_package_src):
+    """
+    List platform packages archives files
+
+    Args:
+        plt_package_src (list of dict of str): Packages sources.
+
+    Returns:
+        list of str: Files.
+    """
+    return [
+        pkg["name"]
+        for pkg in plt_package_src
+        if pkg["name"].lower().endswith(".tar.gz")
+    ]
+
+
+def xrt_platform_pkg_files(plt_package_src, unarchive, ansible_facts, directory):
+    """
+    List platform packages files to install.
+
+    Args:
+        plt_package_src (list of dict of str): Packages sources.
+        unarchive (dict of str): "unarchive" task with "with_items" result.
+        ansible_facts (dict): Ansible facts.
+        directory (str): Directory path.
+
+    Returns:
+        list of str: Files paths.
+    """
+    from os.path import join
+
+    ext = _PKG_EXTENSION[_os_release(ansible_facts)[0]]
+    files = set(
+        pkg["name"] for pkg in plt_package_src if pkg["name"].lower().endswith(ext)
+    )
+    for result in unarchive.get("results", ()):
+        try:
+            filenames = result["files"]
+        except KeyError:
+            continue
+        for filename in filenames:
+            if filename.lower().endswith(ext):
+                files.add(filename)
+    return [join(directory, file) for file in files]
 
 
 def xrt_latest(env, ansible_facts):
@@ -352,6 +546,9 @@ class FilterModule(object):
             "xrt_kernel": xrt_kernel,
             "xrt_pkg_name": xrt_pkg_name,
             "xrt_pkg_src": xrt_pkg_src,
+            "xrt_platform_pkg_src": xrt_platform_pkg_src,
+            "xrt_platform_pkg_files": xrt_platform_pkg_files,
+            "xrt_platform_pkg_archives": xrt_platform_pkg_archives,
             "xrt_latest": xrt_latest,
             "xrt_find_package_path": xrt_find_package_path,
             "xrt_find_devtoolset": xrt_find_devtoolset,

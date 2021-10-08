@@ -5,6 +5,11 @@
     path: "{{ xrt_tmp.path }}"
     state: absent
 
+- name: Clean up platform temporary directory
+  file:
+    path: "{{ plt_tmp.path }}"
+    state: absent
+
 - name: Clean up AWS temporary directory
   file:
     path: "{{ aws_tmp.path }}"

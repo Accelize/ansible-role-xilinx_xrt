@@ -21,6 +21,8 @@ The role requires to be run as root on the target host.
 * **xilinx_xrt_env**: XRT specific environment.
   Supported values: `aws`, `azure`.
   If not specified, default to the classical Xilinx XRT environment.
+* **xilinx_xrt_platforms**: List of FPGA platforms. If specified, install related deployment target platform packages.
+  Supported values in the list: `u50`, `u200`, `u250`, `u280`.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible.
   Default to `true`.
 * **xilinx_xrt_bashrc**: If `true`, add the source of the XRT setup script to the user `~/.bashrc`.
