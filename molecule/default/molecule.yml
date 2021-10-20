@@ -122,6 +122,16 @@ platforms:
       - aws_fpga_src
       - no_xrt
 
+  - name: centos_7-video_sdk
+    image: centos:7
+    groups:
+      - video_sdk
+
+  - name: amzn_2-video_sdk
+    image: amazonlinux:2
+    groups:
+      - video_sdk
+
 provisioner:
   name: ansible
   inventory:
@@ -155,6 +165,8 @@ provisioner:
       aws_fpga_src:
         xilinx_xrt_env: aws
         aws_fpga_src_install: '/opt/aws_fpga'
+      video_sdk:
+        xilinx_video_sdk_install: true
 
 verifier:
   name: testinfra

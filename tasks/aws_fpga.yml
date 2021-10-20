@@ -40,6 +40,16 @@
     mode: 0644
   when: aws_fpga_src_install is defined
 
+- name: Ensure tar is present
+  package:
+    name: tar
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _tar
+  until: _tar is successful
+  when: ansible_distribution == "Amazon"
+
 - name: Download and extract AWS FPGA release tarbal
   unarchive:
     src: "https://api.github.com/repos/aws/aws-fpga/tarball/\

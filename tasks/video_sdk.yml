@@ -1,0 +1,102 @@
+---
+
+- name: Get "transcode.xclbin" file information
+  stat:
+    path: /opt/xilinx/xcdr/xclbins/transcode.xclbin
+  register: vsdk_xclbin
+
+- include_tasks: epel.yml
+  when: not vsdk_xclbin.stat.exists
+
+- name: Create Xilinx Video SDK temporary directory
+  tempfile:
+    state: directory
+    prefix: vsdk_
+  register: vsdk_tmp
+  notify: Clean up Video SDK temporary directory
+  when: not vsdk_xclbin.stat.exists
+
+- name: Get the Xilinx Video SDK latest release
+  uri:
+    url: https://api.github.com/repos/Xilinx/video-sdk/releases/latest
+    body_format: json
+  register: _vsdk_release
+  retries: 10
+  delay: 1
+  until: _vsdk_release is successful
+  when: xilinx_video_sdk_version is not defined
+
+- name: Set the Xilinx Video SDK version to the latest release
+  set_fact:
+    xilinx_video_sdk_version: "{{ _vsdk_release.json['tag_name'] }}"
+  when: xilinx_video_sdk_version is not defined
+
+- name: Ensure tar is present
+  package:
+    name: tar
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _tar
+  until: _tar is successful
+  when: ansible_distribution == "Amazon"
+
+- name: Download and extract Xilinx Video SDK release tarbal
+  unarchive:
+    src: "https://api.github.com/repos/Xilinx/video-sdk/tarball/{{ xilinx_video_sdk_version }}"
+    dest: "{{ vsdk_tmp.path }}"
+    remote_src: true
+    extra_opts: ['--strip-components=1']
+    list_files: true
+  retries: 10
+  delay: 1
+  register: vsdk_tar
+  until: vsdk_tar is successful
+  when: not vsdk_xclbin.stat.exists
+
+- include_tasks: kernel_headers.yml
+  when: not vsdk_xclbin.stat.exists
+
+- name: Set Xilinx Video SDK release directory
+  set_fact:
+    vsdk_release_path: "{{ vsdk_tar | video_sdk_release_dir(xilinx_video_sdk_version, ansible_facts, vsdk_tmp.path) }}"
+  when: not vsdk_xclbin.stat.exists
+
+- name: Ensure Xilinx Video SDK dependencies are present
+  apt:
+    name:
+      - "linux-modules-extra-{{ ansible_kernel }}"
+      - python
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _vsdk_deb_deps
+  until: _vsdk_deb_deps is successful
+  when:
+    - ansible_os_family == 'Debian'
+    - not vsdk_xclbin.stat.exists
+
+- name: Ensure Xilinx Video SDK dependencies are present
+  yum:
+    name:
+      - boost-devel
+      - gcc-c++
+    state: present
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _vsdk_rpm_deps
+  until: _vsdk_rpm_deps is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - not vsdk_xclbin.stat.exists
+
+- name: Install Xilinx Video SDK
+  command: ./install.sh -sw
+  args:
+    chdir: "{{ vsdk_release_path }}"
+    creates: /opt/xilinx/xcdr/xclbins/transcode.xclbin
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  when: not vsdk_xclbin.stat.exists

@@ -15,6 +15,11 @@
     path: "{{ aws_tmp.path }}"
     state: absent
 
+- name: Clean up Video SDK temporary directory
+  file:
+    path: "{{ vsdk_tmp.path }}"
+    state: absent
+
 - name: Ensure Xilinx Management Proxy Daemon is started and enabled at boot
   service:
     name: mpd

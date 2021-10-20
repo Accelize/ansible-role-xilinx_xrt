@@ -1,0 +1,175 @@
+---
+
+- name: Ensure Linux kernel version is compatible
+  include_role:
+    name: accelize.linux_kernel
+  vars:
+    kernel_version: "{{ xrt_required_kernel }}"
+  when:
+    - xilinx_xrt_ensure_compatible_kernel | bool
+    - xrt_required_kernel != ""  # noqa empty-string-compare
+    - not (xilinx_xrt_container | bool)
+
+- name: Get "xbutil" file information
+  stat:
+    path: /opt/xilinx/xrt/bin/xbutil
+  register: xbutil
+
+- name: Create temporary directory
+  tempfile:
+    state: directory
+    prefix: xrt_
+  register: xrt_tmp
+  notify: Clean up temporary directory
+  when: not xbutil.stat.exists
+
+- name: Ensure pyopencl package is installed on Ubuntu 18.04 to avoid XRT install failure
+  apt:
+    name: python-pyopencl
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _pyopencl
+  until: _pyopencl is successful
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_release == 'bionic'
+    - not xbutil.stat.exists
+
+- include_tasks: xrt_from_pkg.yml
+  when:
+    - not (xilinx_xrt_from_src | bool)
+    - not xbutil.stat.exists
+
+- include_tasks: xrt_from_src.yml
+  when:
+    - xilinx_xrt_from_src | bool
+    - not xbutil.stat.exists
+
+- name: Ensure XRT RPM package is installed
+  package:
+    name: "{{ xrt_package_path }}"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _xrt_rpm
+  until: _xrt_rpm is successful
+  when:
+    - ansible_os_family == 'RedHat'
+    - not xbutil.stat.exists
+
+- name: Ensure XRT DEB package is installed
+  apt:
+    deb: "{{ xrt_package_path }}"
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: xrt_deb
+  until: xrt_deb is successful
+  when:
+    - ansible_os_family == 'Debian'
+    - not xbutil.stat.exists
+
+- block:
+    - name: Verify that XOCL kernel module is properly installed
+      command: lsmod
+      register: _lsmod
+      failed_when: "not 'xocl' in _lsmod.stdout"
+      changed_when: false
+
+  rescue:
+    - name: Show XRT DEB install log
+      debug:
+        msg: "{{ xrt_deb.stdout }}"
+
+    - name: Get DKMS make log
+      shell: cat /var/lib/dkms/xrt/*/build/make.log
+      register: dkms_log
+      changed_when: false
+
+    - name: Show DKMS make log
+      debug:
+        msg: "{{ dkms_log.stdout }}"
+
+    - name: Fail on XOCL kernel module installation failure
+      fail:
+        msg: The XOCL driver is not properly installed.
+
+  when:
+    - not (xilinx_xrt_container | bool)
+    - not xbutil.stat.exists
+
+- name: Ensure XRT is sourced in ~/.bashrc
+  lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    regexp: "^source /opt/xilinx/xrt/setup.sh"
+    line: source /opt/xilinx/xrt/setup.sh
+  when: xilinx_xrt_bashrc | bool
+
+- include_tasks: xrt_env_from_pkg.yml
+  when:
+    - xilinx_xrt_env is defined
+    - not (xilinx_xrt_from_src | bool)
+    - not xbutil.stat.exists
+
+- include_tasks: xrt_env_from_src.yml
+  when:
+    - xilinx_xrt_env is defined
+    - xilinx_xrt_from_src | bool
+    - not xbutil.stat.exists
+
+- name: Ensure environment specific XRT package is installed
+  package:
+    deb: "{{ env_package_path }}"
+    state: present
+    install_recommends: false
+  retries: 10
+  delay: 1
+  register: _xrt_env_deb
+  until: _xrt_env_deb is successful
+  when:
+    - xilinx_xrt_env is defined
+    - not xbutil.stat.exists
+    - ansible_os_family == 'Debian'
+
+- name: Ensure environment specific XRT package is installed
+  package:
+    name: "{{ env_package_path }}"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _xrt_env_rpm
+  until: _xrt_env_rpm is successful
+  when:
+    - xilinx_xrt_env is defined
+    - not xbutil.stat.exists
+    - ansible_os_family == 'RedHat'
+
+- block:
+    - name: Verify that FPGA are properly detected by xbutil
+      command: /opt/xilinx/xrt/bin/xbutil scan
+      register: xbutil_scan
+      failed_when: "' 0 are usable' in xbutil_scan.stdout"
+      changed_when: false
+
+  rescue:
+    - name: Show xbutil scan output
+      debug:
+        msg: "{{ xbutil_scan.stdout }}"
+
+    - name: Fail on xbutil scan not detecting FPGA
+      fail:
+        msg: xbutil does not found FPGA.
+
+  when:
+    - xilinx_xrt_check_fpga | bool
+    - not (xilinx_xrt_container | bool)
+
+- include_tasks: deployment_target_platform.yml
+  when: xilinx_xrt_platforms is defined

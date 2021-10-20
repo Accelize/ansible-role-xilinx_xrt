@@ -63,6 +63,17 @@ The following is only available when **xilinx_xrt_env** is set to `aws`.
   This may require *xilinx_xrt_install* set to `False`.
   Supported values: `xdma`.
 
+### Xilinx Video SDK
+
+Extra variable associated with [Xilinx Video SDK](https://github.com/Xilinx/video-sdk) for Alveo U30/AWS VT1.
+
+* **xilinx_video_sdk_install**: If `true`, install Xilinx video SDK. 
+  Default to `true`.
+* **xilinx_video_sdk_version**: Xilinx video SDK version to install.
+  Default to the latest available.
+
+Note: `xilinx_xrt_install` is automatically set to `false` with the Xilinx video SDK because it already contains XRT.
+
 ### Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
@@ -86,6 +97,7 @@ Copyright Accelize 2019, Apache 2.0
 Installed components licences:
 
 * [Xilinx XRT license](https://github.com/Xilinx/XRT/blob/master/LICENSE)
+* [Xilinx Video SDK license](https://github.com/Xilinx/video-sdk/blob/master/LICENSE.txt)
 * [AWS FPGA license](https://github.com/aws/aws-fpga/blob/master/LICENSE.txt)
 
 *This Ansible role is not endorsed or affiliated by Xilinx or AWS.*

@@ -35,6 +35,9 @@ aws_fpga_sdk_others: false
 aws_fpga_sdk_group: fpgauser
 aws_fpga_sdk_override_group: false
 
+# Xilinx Video SDK
+xilinx_video_sdk_install: false
+
 # Internals variables
 # -------------------
 

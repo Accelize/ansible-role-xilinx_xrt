@@ -412,7 +412,7 @@ def xrt_platform_pkg_files(plt_package_src, unarchive, ansible_facts, directory)
 
     Args:
         plt_package_src (list of dict of str): Packages sources.
-        unarchive (dict of str): "unarchive" task with "with_items" result.
+        unarchive (dict): "unarchive" task with "with_items" result.
         ansible_facts (dict): Ansible facts.
         directory (str): Directory path.
 
@@ -434,6 +434,51 @@ def xrt_platform_pkg_files(plt_package_src, unarchive, ansible_facts, directory)
             if filename.lower().endswith(ext):
                 files.add(filename)
     return [join(directory, file) for file in files]
+
+
+def video_sdk_release_dir(unarchive, version, ansible_facts, directory):
+    """
+    Get release directory for Xilinx Video SDK.
+
+    Args:
+        unarchive (dict): "unarchive" task.
+        version (str): Xilinx Video SDK version.
+        ansible_facts (dict): Ansible facts.
+        directory (str): Directory path.
+
+    Returns:
+        str: Release directory.
+    """
+    from os.path import join
+    from re import compile
+
+    dist = ansible_facts["distribution"]
+    if ansible_facts["os_family"] == "RedHat":
+        dist_version = ansible_facts["distribution_major_version"] + r"\.\d+"
+        if dist != "Amazon":
+            dist = "RHL"
+    else:
+        dist_version = ansible_facts["distribution_version"]
+
+    match = compile(
+        "".join(
+            (
+                "^release/U30_",
+                dist,
+                "_",
+                dist_version,
+                "_",
+                str(version),
+                "_.*$",
+            )
+        )
+    ).match
+
+    for path in sorted(unarchive["files"]):
+        if match(path):
+            return join(directory, path)
+
+    raise ValueError("No Xilinx Video SDK version found for this OS")
 
 
 def xrt_latest(env, ansible_facts):
@@ -543,6 +588,7 @@ class FilterModule(object):
     def filters():
         """Return filter"""
         return {
+            "video_sdk_release_dir": video_sdk_release_dir,
             "xrt_kernel": xrt_kernel,
             "xrt_pkg_name": xrt_pkg_name,
             "xrt_pkg_src": xrt_pkg_src,

@@ -1,0 +1,33 @@
+---
+
+- name: Ensure Amazon Linux EPEL extra is enabled
+  command: "amazon-linux-extras enable epel"
+  changed_when: false
+  retries: 10
+  delay: 1
+  register: _epel
+  until: _epel is successful
+  when: ansible_distribution == 'Amazon'
+
+- name: Ensure EPEL repository is installed
+  package:
+    name: epel-release
+    install_weak_deps: false
+  retries: 10
+  delay: 1
+  register: _epel
+  until: _epel is successful
+  when: ansible_distribution in ("CentOS", "Amazon")
+
+- name: Ensure EPEL repository is installed
+  package:
+    name: "https://dl.fedoraproject.org/pub/epel/\
+           epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+    state: present
+    install_weak_deps: false
+    disable_gpg_check: true
+  retries: 10
+  delay: 1
+  register: _epel_rhel
+  until: _epel_rhel is successful
+  when: ansible_distribution == "Red Hat Enterprise Linux"
