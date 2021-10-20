@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/Accelize/DRM/_apis/build/status/Accelize.ansible-role-xilinx_xrt?branchName=Update)](https://dev.azure.com/Accelize/DRM/_build/latest?definitionId=25&branchName=Update)
+[![Build Status](https://dev.azure.com/Accelize/DRM/_apis/build/status/Ansible%20-%20Xilinx%20XRT?branchName=master)](https://dev.azure.com/Accelize/DRM/_build/latest?definitionId=25&branchName=master)
 
 # Xilinx XRT Ansible Role
 
