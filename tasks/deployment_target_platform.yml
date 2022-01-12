@@ -83,13 +83,6 @@
   when: ansible_os_family == 'RedHat'
 
 - name: Ensure deployment target plaform DEB packages are installed
-  apt:
-    deb: "{{ item }}"
-    state: present
-    install_recommends: false
-  retries: 10
-  delay: 1
-  register: _plt_deb
-  until: _plt_deb is successful
-  with_items: "{{ plt_packages }}"
+  command: "dpkg -i {{ plt_packages | join(' ') }}"
+  changed_when: false
   when: ansible_os_family == 'Debian'
