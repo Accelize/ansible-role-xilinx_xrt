@@ -436,13 +436,12 @@ def xrt_platform_pkg_files(plt_package_src, unarchive, ansible_facts, directory)
     return [join(directory, file) for file in files]
 
 
-def video_sdk_release_dir(unarchive, version, ansible_facts, directory):
+def video_sdk_release_dir(unarchive, ansible_facts, directory):
     """
     Get release directory for Xilinx Video SDK.
 
     Args:
         unarchive (dict): "unarchive" task.
-        version (str): Xilinx Video SDK version.
         ansible_facts (dict): Ansible facts.
         directory (str): Directory path.
 
@@ -467,8 +466,6 @@ def video_sdk_release_dir(unarchive, version, ansible_facts, directory):
                 dist,
                 "_",
                 dist_version,
-                "_",
-                str(version),
                 "_.*$",
             )
         )

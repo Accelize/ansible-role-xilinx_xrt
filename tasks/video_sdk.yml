@@ -16,21 +16,6 @@
   notify: Clean up Video SDK temporary directory
   when: not vsdk_xclbin.stat.exists
 
-- name: Get the Xilinx Video SDK latest release
-  uri:
-    url: https://api.github.com/repos/Xilinx/video-sdk/releases/latest
-    body_format: json
-  register: _vsdk_release
-  retries: 10
-  delay: 1
-  until: _vsdk_release is successful
-  when: xilinx_video_sdk_version is not defined
-
-- name: Set the Xilinx Video SDK version to the latest release
-  set_fact:
-    xilinx_video_sdk_version: "{{ _vsdk_release.json['tag_name'] }}"
-  when: xilinx_video_sdk_version is not defined
-
 - name: Ensure tar is present
   package:
     name: tar
@@ -59,7 +44,7 @@
 
 - name: Set Xilinx Video SDK release directory
   set_fact:
-    vsdk_release_path: "{{ vsdk_tar | video_sdk_release_dir(xilinx_video_sdk_version, ansible_facts, vsdk_tmp.path) }}"
+    vsdk_release_path: "{{ vsdk_tar | video_sdk_release_dir(ansible_facts, vsdk_tmp.path) }}"
   when: not vsdk_xclbin.stat.exists
 
 - name: Ensure Xilinx Video SDK dependencies are present
