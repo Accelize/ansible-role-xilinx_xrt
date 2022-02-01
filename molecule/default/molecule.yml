@@ -74,7 +74,7 @@ platforms:
       - xrt_2018_2
 
   - name: centos_8-2021.1
-    image: centos:8
+    image: quay.io/centos/centos:stream8
     groups:
       - xrt_2021_1
 

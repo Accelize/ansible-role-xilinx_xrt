@@ -4,6 +4,16 @@
 # https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/alveo.html
 _BASE_URL = "https://www.xilinx.com/bin/public/openDownload?filename="
 _PACKAGES = {
+    "2021.2": {
+        "RedHat": {
+            "7": "xrt_202120.2.12.427_7.8.2003-x86_64-xrt.rpm",
+            "8": "xrt_202120.2.12.427_8.1.1911-x86_64-xrt.rpm",
+        },
+        "Debian": {
+            "bionic": "xrt_202120.2.12.427_18.04-amd64-xrt.deb",
+            "focal": "xrt_202120.2.12.427_20.04-amd64-xrt.deb",
+        },
+    },
     "2021.1": {
         "RedHat": {
             "7": "xrt_202110.2.11.634_7.6.1810-x86_64-xrt.rpm",
@@ -147,6 +157,10 @@ _MAX_KERNEL = {
 # Deployment Target Platform packages (Same base URL as _PACKAGES)
 _PLATFORM_PACKAGES = {
     "u50": {
+        "2021.2": {
+            "Debian": "xilinx-u50_2021.2_2021_1021_1001-all.deb.tar.gz",
+            "RedHat": "xilinx-u50_2021.2_2021_1021_1001-noarch.rpm.tar.gz",
+        },
         "2021.1": {
             "Debian": "xilinx-u50-gen3x16-xdma-all_1-2784799.deb.tar.gz",
             "RedHat": "xilinx-u50-gen3x16-xdma-noarch_1-2784799.rpm.tar.gz",
@@ -177,7 +191,17 @@ _PLATFORM_PACKAGES = {
             "RedHat": "xilinx-u50-xdma-201910.1-0911.x86_64.rpm",
         },
     },
+    "u55c": {
+        "2021.2": {
+            "Debian": "xilinx-u55c_2021.2_2021_1021_1001-all.deb.tar.gz",
+            "RedHat": "xilinx-u55c_2021.2_2021_1021_1001-noarch.rpm.tar.gz",
+        },
+    },
     "u200": {
+        "2021.2": {
+            "Debian": "xilinx-u200_2021.2_2021_1021_1001-all.deb.tar.gz",
+            "RedHat": "xilinx-u200_2021.2_2021_1021_1001-noarch.rpm.tar.gz",
+        },
         "2021.1": {
             "Debian": "xilinx-u200-gen3x16-xdma-all_1-3209015.deb_2.tar.gz",
             "RedHat": "xilinx-u200-gen3x16-xdma-noarch_1-3209015.rpm_2.tar.gz",
@@ -191,6 +215,10 @@ _PLATFORM_PACKAGES = {
         },
     },
     "u250": {
+        "2021.2": {
+            "Debian": "xilinx-u250_2021.2_2021_1021_1001-all.deb.tar.gz",
+            "RedHat": "xilinx-u250_2021.2_2021_1021_1001-noarch.rpm.tar.gz",
+        },
         "2021.1": {
             "Debian": "xilinx-u250-gen3x16-xdma-all_3.1-3063142.deb_2.tar.gz",
             "RedHat": "xilinx-u250-gen3x16-xdma-noarch_3.1-3063142.rpm_2.tar.gz",
