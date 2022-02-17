@@ -1,5 +1,10 @@
 ---
 
+- name: Get "xbutil" file information
+  stat:
+    path: /opt/xilinx/xrt/bin/xbutil
+  register: xbutil
+
 - name: Ensure Linux kernel version is compatible
   include_role:
     name: accelize.linux_kernel
@@ -9,11 +14,10 @@
     - xilinx_xrt_ensure_compatible_kernel | bool
     - xrt_required_kernel != ""  # noqa empty-string-compare
     - not (xilinx_xrt_container | bool)
+    - not xbutil.stat.exists
 
-- name: Get "xbutil" file information
-  stat:
-    path: /opt/xilinx/xrt/bin/xbutil
-  register: xbutil
+- include_tasks: kernel.yml
+  when: not xbutil.stat.exists
 
 - name: Create temporary directory
   tempfile:

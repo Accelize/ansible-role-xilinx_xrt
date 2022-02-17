@@ -5,6 +5,9 @@
     path: /opt/xilinx/xcdr/xclbins/transcode.xclbin
   register: vsdk_xclbin
 
+- include_tasks: kernel.yml
+  when: not vsdk_xclbin.stat.exists
+
 - include_tasks: epel.yml
   when: not vsdk_xclbin.stat.exists
 
@@ -37,9 +40,6 @@
   delay: 1
   register: vsdk_tar
   until: vsdk_tar is successful
-  when: not vsdk_xclbin.stat.exists
-
-- include_tasks: kernel.yml
   when: not vsdk_xclbin.stat.exists
 
 - name: Set Xilinx Video SDK release directory

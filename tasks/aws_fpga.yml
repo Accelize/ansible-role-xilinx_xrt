@@ -1,5 +1,8 @@
 ---
 
+- include_tasks: kernel.yml
+  when: aws_fpga_driver is defined
+
 - name: Get "/usr/local/lib64" directory information
   stat:
     path: /usr/local/lib64
@@ -109,9 +112,6 @@
               ternary('lib64','lib') }}/libfpga_mgmt.so"
     executable: /bin/bash
   when: not libfpga_mgmt.stat.exists
-
-- include_tasks: kernel.yml
-  when: aws_fpga_driver is defined
 
 - name: Install AWS FPGA alternate driver
   command: "make -C {{ aws_fpga_src }}/sdk/linux_kernel_drivers/{{ aws_fpga_driver }} install"
