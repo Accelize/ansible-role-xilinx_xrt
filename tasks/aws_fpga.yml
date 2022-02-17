@@ -110,7 +110,7 @@
     executable: /bin/bash
   when: not libfpga_mgmt.stat.exists
 
-- include_tasks: kernel_headers.yml
+- include_tasks: kernel.yml
   when: aws_fpga_driver is defined
 
 - name: Install AWS FPGA alternate driver

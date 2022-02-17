@@ -39,7 +39,7 @@
   until: vsdk_tar is successful
   when: not vsdk_xclbin.stat.exists
 
-- include_tasks: kernel_headers.yml
+- include_tasks: kernel.yml
   when: not vsdk_xclbin.stat.exists
 
 - name: Set Xilinx Video SDK release directory
@@ -49,9 +49,7 @@
 
 - name: Ensure Xilinx Video SDK dependencies are present
   apt:
-    name:
-      - "linux-modules-extra-{{ ansible_kernel }}"
-      - python
+    name: python
     state: present
     install_recommends: false
   retries: 10

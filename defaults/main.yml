@@ -15,7 +15,7 @@ _xilinx_xrt_env: "{{ xilinx_xrt_env | default('') }}"
 xilinx_xrt_version: "{{ _xilinx_xrt_env | xrt_latest(ansible_facts) }}"
 
 # Linux kernel version compatibles with XRT
-xilinx_xrt_ensure_compatible_kernel: true
+xilinx_xrt_ensure_compatible_kernel: false
 
 # Check if properly installed by trying to detect FPGA
 xilinx_xrt_check_fpga: false

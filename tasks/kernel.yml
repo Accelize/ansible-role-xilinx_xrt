@@ -1,6 +1,6 @@
 ---
 
-- name: Ensure Kernel headers RPM are installed
+- name: Ensure Kernel headers are installed
   package:
     name:
       - "kernel-devel-{{ ansible_kernel }}"
@@ -17,21 +17,44 @@
     - not (xilinx_xrt_container | bool)
 
 - block:
-    - name: Ensure Kernel headers DEB are installed
+    - name: Ensure Kernel headers are installed
       apt:
         name: "linux-headers-{{ ansible_kernel }}"
       retries: 10
       delay: 1
       register: _kernel_deb
       until: _kernel_deb is successful
+
+    - name: Ensure Kernel modules are installed
+      apt:
+        name: "linux-modules-extra-{{ ansible_kernel }}"
+      retries: 10
+      delay: 1
+      register: _kernel_modules_deb
+      until: _kernel_modules_deb is successful
+
   rescue:
-    - name: Ensure Kernel headers DEB are installed
+    - name: Ensure Kernel headers are installed
       apt:
         name: "linux-headers-{{ ansible_kernel }}-generic"
       retries: 10
       delay: 1
       register: _kernel_deb
       until: _kernel_deb is successful
+
+    - name: Ensure Kernel modules are installed
+      apt:
+        name: "linux-modules-extra-{{ ansible_kernel }}-generic"
+      retries: 10
+      delay: 1
+      register: _kernel_modules_deb
+      until: _kernel_modules_deb is successful
+
+  always:
+    - name: Ensure system rebooted after kernel module install
+      reboot:
+      when: _kernel_modules_deb.changed | bool
+
   when:
     - ansible_os_family == 'Debian'
     - not (xilinx_xrt_container | bool)

@@ -24,7 +24,7 @@ The role requires to be run as root on the target host.
 * **xilinx_xrt_platforms**: List of FPGA platforms. If specified, install related deployment target platform packages.
   Supported values in the list: `u50`, `u55c`, `u200`, `u250`, `u280`.
 * **xilinx_xrt_ensure_compatible_kernel**: If `true`, ensure the Linux kernel installed is compatible.
-  Default to `true`.
+  Default to `false`.
 * **xilinx_xrt_bashrc**: If `true`, add the source of the XRT setup script to the user `~/.bashrc`.
   Default to `false`.
 * **xilinx_xrt_check_fpga**: If `true`, check if XRT is properly installed by trying to detect FPGA.
@@ -68,7 +68,7 @@ The following is only available when **xilinx_xrt_env** is set to `aws`.
 Extra variable associated with [Xilinx Video SDK](https://github.com/Xilinx/video-sdk) for Alveo U30/AWS VT1.
 
 * **xilinx_video_sdk_install**: If `true`, install Xilinx video SDK. 
-  Default to `true`.
+  Default to `false`.
 * **xilinx_video_sdk_version**: Xilinx video SDK version to install.
   Default to the latest available.
 
