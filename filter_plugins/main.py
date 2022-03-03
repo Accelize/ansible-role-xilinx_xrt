@@ -89,6 +89,11 @@ _PACKAGES = {
 # https://github.com/aws/aws-fpga/blob/master/SDAccel/docs/XRT_installation_instructions.md
 _AWS_BASE_URL = "https://aws-fpga-developer-ami.s3.amazonaws.com/"
 _AWS_PACKAGES = {
+    "2021.2": {
+        "RedHat": {
+            "7": "1.12.0/Patches/XRT_2021_2/xrt_202120.2.12.0_7.9.2009-x86_64-aws.rpm",
+        },
+    },
     "2021.1": {
         "RedHat": {
             "2": "1.11.0/Patches/XRT_2021_1/xrt_202110.2.11.0_2-x86_64-xrt.rpm",
