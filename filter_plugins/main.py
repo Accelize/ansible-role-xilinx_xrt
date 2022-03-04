@@ -91,6 +91,7 @@ _AWS_BASE_URL = "https://aws-fpga-developer-ami.s3.amazonaws.com/"
 _AWS_PACKAGES = {
     "2021.2": {
         "RedHat": {
+            "2": "1.12.0/Patches/XRT_2021_2/xrt_202210.2.13.0_2-x86_64-xrt.rpm",
             "7": "1.12.0/Patches/XRT_2021_2/xrt_202120.2.12.0_7.9.2009-x86_64-xrt.rpm",
         },
     },
