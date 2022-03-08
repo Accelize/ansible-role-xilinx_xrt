@@ -15,6 +15,7 @@
   when:
     - ansible_os_family == 'RedHat'
     - not (xilinx_xrt_container | bool)
+    - xilinx_xrt_ensure_compatible_kernel | bool
 
 - block:
     - name: Ensure Kernel headers are installed
@@ -59,4 +60,3 @@
     - ansible_os_family == 'Debian'
     - not (xilinx_xrt_container | bool)
     - xilinx_xrt_ensure_compatible_kernel | bool
-
