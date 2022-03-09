@@ -1,4 +1,13 @@
 ---
+- name: Ensure CentOS Vault repositories are up to date
+  package:
+    name: centos-release
+    state: latest  # noqa package-latest
+  retries: 10
+  delay: 1
+  register: _centos_release
+  until: _centos_release is successful
+  when: ansible_distribution == 'CentOS'
 
 - name: Ensure Kernel headers are installed
   package:
@@ -15,7 +24,6 @@
   when:
     - ansible_os_family == 'RedHat'
     - not (xilinx_xrt_container | bool)
-    - xilinx_xrt_ensure_compatible_kernel | bool
 
 - block:
     - name: Ensure Kernel headers are installed
@@ -59,4 +67,3 @@
   when:
     - ansible_os_family == 'Debian'
     - not (xilinx_xrt_container | bool)
-    - xilinx_xrt_ensure_compatible_kernel | bool
